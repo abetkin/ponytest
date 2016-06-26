@@ -1,8 +1,9 @@
 
+from functools import wraps
 import click
 from ponytest import Layer, with_cli_args
 
-def ipdb_context(test):
+def ipdb_layer(test):
     def decorate(func):
         import ipdb
         @wraps(func)
@@ -77,6 +78,7 @@ class TwoContexts(ContextDecorator):
     def one(cls, test):
         print(test._testMethodName)
         try:
+            # TODO test.value
             import greenlet
             assert not hasattr(greenlet.getcurrent(), 'value')
             greenlet.getcurrent().value = 1
@@ -98,15 +100,20 @@ class TwoContexts(ContextDecorator):
 
 from ponytest import default_layers
 
-default_layers.extend(
-    TwoContexts
-)
+default_layers.extend([
+    LoggingContext,
+    TwoContexts,
+])
+
+
 
 
 from unittest import TestCase
 
 
 class Test(TestCase):
+
+    # layers = [ipdb_layer]
 
     def test(self):
         import greenlet

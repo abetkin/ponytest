@@ -24,9 +24,6 @@ import unittest
 
 from itertools import product
 
-# TODO accept test instance as argument for ctx
-
-# TODO setUpClass
 
 class Layer(object):
     '''
@@ -41,6 +38,8 @@ class TestLoader(_TestLoader):
     default_layers = deque()
 
     def _make_tests(self, names, klass, layers):
+
+        import ipdb; ipdb.set_trace()
         context_mgrs = []
         for L in layers:
             if not isinstance(L, type) or not issubclass(L, Layer):
@@ -105,6 +104,7 @@ class TestLoader(_TestLoader):
 
     def get_layers_chains(self, klass):
         layer_sets = []
+        print(':', getattr(klass, 'layers', self.default_layers))
         for ctx in getattr(klass, 'layers', self.default_layers):
             try:
                 layer_sets.append(tuple(ctx))
@@ -137,5 +137,3 @@ class TestProgram(_TestProgram):
 
 default_layers = TestLoader.default_layers
 
-if __name__ == '__main__':
-    TestProgram(module=None)
