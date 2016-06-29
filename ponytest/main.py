@@ -29,7 +29,9 @@ class TestLoader(_TestLoader):
         if test_scoped:
             stacks = {name: ExitStack() for name in names}
 
-            _setUp = klass.setUp.__func__
+            _setUp = klass.setUp
+            if PY2:
+                _setUp = _setUp.__func__
             @wraps(_setUp)
             def setUp(test):
                 stack = stacks[test._testMethodName]
@@ -41,7 +43,9 @@ class TestLoader(_TestLoader):
                     stacks[test._testMethodName] = stack.pop_all()
             dic['setUp'] = setUp
 
-            _tearDown = klass.tearDown.__func__
+            _tearDown = klass.tearDown
+            if PY2:
+                _tearDown = _tearDown.__func__
             @wraps(_tearDown)
             def tearDown(test):
                 stack = stacks[test._testMethodName]
