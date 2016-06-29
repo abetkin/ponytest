@@ -35,10 +35,11 @@ class TestLoader(_TestLoader):
             @wraps(_setUp)
             def setUp(test):
                 stack = stacks[test._testMethodName]
-                for Ctx in test_scoped:
-                    ctx = Ctx(test)
-                    stack.enter_context(ctx)
                 with stack:
+                    for Ctx in test_scoped:
+                        ctx = Ctx(test)
+                        stack.enter_context(ctx)
+
                     # TODO maybe allow ctx managers that execute after test setUp?
                     _setUp(test)
                     stacks[test._testMethodName] = stack.pop_all()
@@ -77,10 +78,11 @@ class TestLoader(_TestLoader):
             @wraps(_setUpClass)
             def setUpClass(cls, *arg, **kw):
                 stack = stack_holder[0]
-                for Ctx in case_scoped:
-                    ctx = Ctx(cls)
-                    stack.enter_context(ctx)
                 with stack:
+                    for Ctx in case_scoped:
+                        ctx = Ctx(cls)
+                        stack.enter_context(ctx)
+
                     _setUpClass(cls, *arg, **kw)
                     stack_holder[0] = stack.pop_all()
             dic['setUpClass'] = classmethod(setUpClass)

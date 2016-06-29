@@ -40,7 +40,7 @@ def use_ipdb_at_test_scope():
         yield mgr
 
 
-pony_fixtures.extend([
+pony_fixtures.extendleft([
     use_ipdb,
     use_ipdb_at_test_scope,
 ])
