@@ -11,7 +11,7 @@ def args_getter(ctx, *args, **kwargs):
 
 def with_cli_args(func):
     '''
-    A decorator helping with using click in standalone_mode.
+    A decorator helping with using click with standalone_mode turned off.
     '''
     getter_cmd = click.command(context_settings={
         'allow_extra_args': True,
