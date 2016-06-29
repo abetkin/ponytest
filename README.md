@@ -84,7 +84,7 @@ with every combination of fixtures. For, example, for the fixture set below
 ```python
 pony_fixtures = [
     [fixt1],
-    [fixt2, fixt3]
+    [fixt2, fixt3],
 ]
 ```
 
@@ -102,6 +102,11 @@ from ponytest import with_cli_args
 def use_ipdb(debug):
     if debug:
         yield ipdb_context
+
+# And later
+pony_fixtures = [
+    use_ipdb
+]
 ```
 
 You can also register fixtures globally (like it is done with the `ipdb` fixture):
