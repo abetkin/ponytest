@@ -27,6 +27,12 @@ Ponytest is lightweight (< 200 SLOC)
 
 ## Try it
 
+You can install ponytest with
+
+```
+python -m pip install git+https://github.com/abetkin/ponytest
+```
+
 Debugger mode:
 
 ```
@@ -73,7 +79,7 @@ pony_contexts = [
 we would have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` contexts.
 
 Besides a list, a fixture can be specified with a callable that returns iterable
-(in case when, say, fixture set depends on passed command line arguments):
+(in case when, say, fixture set depends on the command line arguments passed):
 
 ```python
 import click # http://click.pocoo.org/
@@ -86,7 +92,7 @@ def use_ipdb(debug):
         yield ipdb_context
 ```
 
-You can also register fixtures globally (like we did with the `ipdb` fixture):
+You can also register fixtures globally (like it is done with the `ipdb` fixture):
 
 ```python
 from ponytest import pony_contexts # a deque
