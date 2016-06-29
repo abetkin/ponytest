@@ -41,7 +41,7 @@ Debugger mode:
 python -m ponytest <unittest args> -- --ipdb
 ```
 
-`Note:` You can pass additional attributes for ponytest after the double-dash separator (`--`)
+`Note:` You can pass additional arguments for ponytest after the double-dash separator (`--`)
 
 Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a test) or case-scoped
 (wrapping a set of tests in a testcase class). Case-scoped is default.
