@@ -3,7 +3,7 @@
 ## What it is
 
 Testing utility used to test [Pony ORM](https://github.com/ponyorm/pony).
-A drop-in unittest replacement.
+A drop-in `unittest` replacement.
 
 ## Motivation
 
