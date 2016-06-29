@@ -24,7 +24,8 @@ def ipdb_context(cls):
         except Exception as exc:
             raised.append(exc)
             raise
-    raise raised[0]
+    if raised:
+        raise raised[0]
 
 @with_cli_args
 @click.option('--ipdb', 'debug', is_flag=True)
