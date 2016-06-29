@@ -15,6 +15,8 @@ we needed a way to run the same set of tests against different databases.
 python -m test.utility tests --db mysql --db oracle
 ```
 
+Also, it is considered in some dev circles that missing debugger support in unittest makes it unusable.
+
 ## Features
 
 With ponytest, you can:
