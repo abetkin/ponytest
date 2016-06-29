@@ -72,7 +72,7 @@ pony_contexts = [
 
 we would have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` contexts.
 
-Besides a list, fixture can be specified with a callable that returns iterable
+Besides a list, a fixture can be specified with a callable that returns iterable
 (in case when, say, fixture set depends on passed command line arguments):
 
 ```python
