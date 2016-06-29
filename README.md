@@ -72,6 +72,20 @@ pony_contexts = [
 
 we would have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` contexts.
 
+Besides a list, fixture can be specified with a callable that returns iterable
+(in case when, say, fixture set depends on passed command line arguments):
+
+```python
+import click # http://click.pocoo.org/
+from ponytest import with_cli_args
+
+@with_cli_args
+@click.option('--ipdb', 'debug', is_flag=True)
+def use_ipdb(debug):
+    if debug:
+        yield ipdb_context
+```
+
 You can also register fixtures globally (like we did with the `ipdb` fixture):
 
 ```python
@@ -79,5 +93,5 @@ from ponytest import pony_contexts # a deque
 pony_contexts.appendleft(a_fixture)
 ```
 
-You can also find some examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
-and [default_contexts.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_contexts.py)
+You can find more examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
+and [default_contexts.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_contexts.py) module.
