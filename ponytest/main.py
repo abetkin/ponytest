@@ -39,6 +39,7 @@ class TestLoader(_TestLoader):
                     ctx = Ctx(test)
                     stack.enter_context(ctx)
                 with stack:
+                    # TODO maybe allow ctx managers proceed after test setUp
                     _setUp(test)
                     stacks[test._testMethodName] = stack.pop_all()
             dic['setUp'] = setUp
@@ -76,8 +77,8 @@ class TestLoader(_TestLoader):
             @wraps(_setUpClass)
             def setUpClass(cls, *arg, **kw):
                 stack = stack_holder[0]
-                for L in case_scoped:
-                    ctx = L(cls)
+                for Ctx in case_scoped:
+                    ctx = Ctx(cls)
                     stack.enter_context(ctx)
                 with stack:
                     _setUpClass(cls, *arg, **kw)
@@ -96,14 +97,13 @@ class TestLoader(_TestLoader):
         new_klass = type(type_name, (klass,), dic)
         return [new_klass(name) for name in names]
 
-
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)
         testCaseNames = self.getTestCaseNames(testCaseClass)
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
         suites = []
-        for chain in self.get_layers_chains(testCaseClass):
+        for chain in self.get_fixture_chains(testCaseClass):
             tests = self._make_tests(testCaseNames, testCaseClass, chain)
             suites.append(
                 self.suiteClass(tests)
@@ -116,19 +116,19 @@ class TestLoader(_TestLoader):
             ret = suites[0]
         return ret
 
-    def get_layers_chains(self, klass):
-        layer_sets = []
+    def get_fixture_chains(self, klass):
+        fixture_sets = []
         pony_contexts = getattr(klass, 'pony_contexts', self.pony_contexts)
         for ctx in pony_contexts:
             if not isinstance(ctx, Iterable):
                 ctx = ctx()
-            layers = tuple(ctx)
-            if layers:
-                layer_sets.append(layers)
+            fixtures = tuple(ctx)
+            if fixtures:
+                fixture_sets.append(fixtures)
         ret = []
-        for layer_chain in product(*layer_sets):
+        for fixture_chain in product(*fixture_sets):
             ret.append(
-                tuple(layer_chain)
+                tuple(fixture_chain)
             )
         return ret
 
