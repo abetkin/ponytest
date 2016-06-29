@@ -1,7 +1,11 @@
 from setuptools import setup, find_packages
-import codecs
-import os
-import re
+
+
+REQS = ['click>=6.6']
+
+import sys
+if sys.version_info[0] == 2:
+    REQS.append('contextlib2')
 
 setup(
     name="ponytest",
@@ -10,8 +14,9 @@ setup(
     # see http://packaging.python.org/en/latest/tutorial.html#version
     version='0.1',
 
-    description='Adding "layers" to unittest',
+    description='Taming unittest',
     long_description='''
+        Unittest: adding fixtures via context managers
     ''',
 
     # The project URL.
@@ -43,8 +48,8 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages.
-    py_modules=['ponytest'],
-
+    packages=['ponytest'],
+    install_requires=REQS,
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed.
 )

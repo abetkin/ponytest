@@ -1,86 +1,97 @@
-'''
-Command to launch tests:
-python -m pony.testing <args> --- <OPTIONS>
-'''
 
-from unittest import suite, loader, TestCase as _TestCase, TestProgram as _TestProgram
+import sys
+from unittest import suite, TestProgram as _TestProgram
 from unittest.loader import TestLoader as _TestLoader
 
 from functools import wraps
-import logging
-from contextlib import contextmanager
-import sys
-
-from pony.py23compat import PY2, ContextDecorator
-
-import click
-from pony.click_utils import with_cli_args
-
-from pony.utils import cached_property, class_cached_property
-
-
-import unittest
-
-
 from itertools import product
+from collections import deque, Iterable
 
+from .utils import PY2
+if not PY2:
+    from contextlib import contextmanager, ExitStack
+else:
+    from contextlib2 import contextmanager, ExitStack
 
-class Layer(object):
-    '''
-    Marker class
-    '''
-    # TODO with metaclass ABCMeta ?
-
-
-from collections import deque
 
 class TestLoader(_TestLoader):
-    default_layers = deque()
+    pony_contexts = deque()
 
-    def _make_tests(self, names, klass, layers):
-
-        import ipdb; ipdb.set_trace()
-        context_mgrs = []
-        for L in layers:
-            if not isinstance(L, type) or not issubclass(L, Layer):
-                context_mgrs.append(L)
-        dic = {}
-        for name in names:
-            if not context_mgrs:
-                break
-            func = getattr(klass, name)
-            if PY2:
-                func = func.__func__
-            @wraps(func)
-            def wrapper(test, *arg, _wrapped=func, **kw):
-                for L in context_mgrs:
-                    ctx = L(test)
-                    _wrapped = ctx(_wrapped)
-                return _wrapped(test, *arg, **kw)
-            dic[name] = wrapper
-        def get_mixins():
-            for L in layers:
-                if L in context_mgrs:
-                    continue
-                dic = {}
-                for key in ('setUp', 'tearDown', 'setUpClass', 'tearDownClass'):
-                    for cls in Layer.__mro__:
-                        value = cls.__dict__.get(key)
-                        if value:
-                            dic[key] = value
-                            break
-                if not dic:
-                    continue
-                type_name = ''.join((Layer.__name__, 'Mixin'))
-                yield type(type_name, (object,), dic)
-
-        mixins = tuple(get_mixins())
-        if not mixins and not dic:
+    def _make_tests(self, names, klass, contexts):
+        if not contexts:
             return [klass(name) for name in names]
-        bases = mixins + (klass,)
+        test_scoped = [] # also, layers can be case-scoped (= class-scoped)
+        for Ctx in contexts:
+            if getattr(Ctx, 'test_scoped', False):
+                test_scoped.append(Ctx)
+
+        dic = {}
+        if test_scoped:
+            stacks = {name: ExitStack() for name in names}
+
+            _setUp = klass.setUp.__func__
+            @wraps(_setUp)
+            def setUp(test):
+                stack = stacks[test._testMethodName]
+                for Ctx in test_scoped:
+                    ctx = Ctx(test)
+                    stack.enter_context(ctx)
+                with stack:
+                    _setUp(test)
+                    stacks[test._testMethodName] = stack.pop_all()
+            dic['setUp'] = setUp
+
+            _tearDown = klass.tearDown.__func__
+            @wraps(_tearDown)
+            def tearDown(test):
+                stack = stacks[test._testMethodName]
+                with stack:
+                    _tearDown(test)
+            dic['tearDown'] = tearDown
+
+            for name in names:
+                if not test_scoped:
+                    break
+                func = getattr(klass, name)
+                if PY2:
+                    func = func.__func__
+                @wraps(func)
+                def wrapper(test, _wrapped=func, *arg, **kw):
+                    stack = stacks[test._testMethodName]
+                    with stack:
+                        _wrapped(test, *arg, **kw)
+                        stacks[test._testMethodName] = stack.pop_all()
+                dic[name] = wrapper
+
+        case_scoped = [Ctx for Ctx in contexts if Ctx not in test_scoped]
+
+        if case_scoped:
+            stack_holder = [ExitStack()]
+
+            _setUpClass = klass.setUpClass.__func__
+            @wraps(_setUpClass)
+            def setUpClass(cls, *arg, **kw):
+                stack = stack_holder[0]
+                for L in case_scoped:
+                    ctx = L(cls)
+                    stack.enter_context(ctx)
+                with stack:
+                    _setUpClass(cls, *arg, **kw)
+                    stack_holder[0] = stack.pop_all()
+            dic['setUpClass'] = classmethod(setUpClass)
+
+            _tearDownClass = klass.tearDownClass.__func__
+            @wraps(_tearDownClass)
+            def tearDownClass(cls, *arg, **kw):
+                stack = stack_holder[0]
+                with stack:
+                    return _tearDownClass(cls, *arg, **kw)
+            dic['tearDownClass'] = classmethod(tearDownClass)
+
         type_name = 'PONY_' + klass.__name__
-        new_klass = type(type_name, bases, dic)
+        new_klass = type(type_name, (klass,), dic)
         return [new_klass(name) for name in names]
+
 
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)
@@ -101,22 +112,15 @@ class TestLoader(_TestLoader):
             ret = suites[0]
         return ret
 
-
     def get_layers_chains(self, klass):
         layer_sets = []
-        print(':', getattr(klass, 'layers', self.default_layers))
-        for ctx in getattr(klass, 'layers', self.default_layers):
-            try:
-                layer_sets.append(tuple(ctx))
-                continue
-            except TypeError:
-                pass
-            if hasattr(ctx, 'factory'):
-                layer_sets.append(
-                    tuple(ctx.factory())
-                )
-            else:
-                layer_sets.append([ctx])
+        pony_contexts = getattr(klass, 'pony_contexts', self.pony_contexts)
+        for ctx in pony_contexts:
+            if not isinstance(ctx, Iterable):
+                ctx = ctx()
+            layers = tuple(ctx)
+            if layers:
+                layer_sets.append(layers)
         ret = []
         for layer_chain in product(*layer_sets):
             ret.append(
@@ -134,6 +138,5 @@ class TestProgram(_TestProgram):
         kwargs['testLoader'] = TestLoader()
         super(TestProgram, self).__init__(*args, **kwargs)
 
-
-default_layers = TestLoader.default_layers
+pony_contexts = TestLoader.pony_contexts
 

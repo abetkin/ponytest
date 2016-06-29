@@ -1,121 +1,105 @@
 
 from functools import wraps
 import click
-from ponytest import Layer, with_cli_args
+from ponytest.utils import with_cli_args, class_property
 
-def ipdb_layer(test):
-    def decorate(func):
-        import ipdb
-        @wraps(func)
-        def wrapper(*args, **kwds):
-            raised = []
-            with ipdb.launch_ipdb_on_exception():
-                try:
-                    return func(*args, **kwds)
-                except Exception as exc:
-                    raised.append(exc)
-                    raise
-            raise raised[0]
-        return wrapper
-    return decorate
+import sys
+PY2 = sys.version_info[0] == 2
+
+if not PY2:
+    from contextlib import contextmanager, ContextDecorator
+else:
+    from contextlib2 import contextmanager, ContextDecorator
 
 
-class LoggingContext(Layer):
-
-    def __init__(self, test):
-        pass
-
-    # def __enter__(self):
-    #     print(1)
-
-    # def __exit__(self, *exc_info):
-    #     print(2)
-
-    @classmethod
-    def setUpClass(cls):
-        print('setUp %s' % str(cls.__mro__))
-        # TODO dict
-
-    @classmethod
-    @with_cli_args
-    @click.option('--log', is_flag=True)
-    def factory(cls, log):
-        if log:
-            yield cls
+import unittest
 
 
-# class Layer(object):
-#     TODO
-#     def __init__(self, test):
-#         1
+class TestCaseScoped(unittest.TestCase):
 
-#     def setUp(self):
-#         1
-#     def tearDown(self):
-#         1
-#     @classmethod
-#     def setUpClass(cls):
-#         1
-#     @classmethod
-#     def tearDownClass(cls):
-#         1
-
-
-# class DbContext(ContextDecorator):
-#     def __iter__(self):
-#         1
-
-from contextlib import ContextDecorator, contextmanager
-
-class TwoContexts(ContextDecorator):
-    @classmethod
-    def factory(cls):
-        yield cls.one
-        yield cls.two
-
-    @classmethod
     @contextmanager
-    def one(cls, test):
-        print(test._testMethodName)
-        try:
-            # TODO test.value
-            import greenlet
-            assert not hasattr(greenlet.getcurrent(), 'value')
-            greenlet.getcurrent().value = 1
-            yield
-        finally:
-            del greenlet.getcurrent().value
+    def simplest(cls):
+        assert isinstance(cls, type)
+        cls.added_attribute = 'attr'
+        yield
 
-    @classmethod
-    @contextmanager
-    def two(cls, test):
-        print(test._testMethodName)
-        try:
-            import greenlet
-            assert not hasattr(greenlet.getcurrent(), 'value')
-            greenlet.getcurrent().value = 2
-            yield
-        finally:
-            del greenlet.getcurrent().value
+    pony_contexts = [
+        [simplest]
+    ]
 
-from ponytest import default_layers
-
-default_layers.extend([
-    LoggingContext,
-    TwoContexts,
-])
-
-
-
-
-from unittest import TestCase
-
-
-class Test(TestCase):
-
-    # layers = [ipdb_layer]
+    del simplest
 
     def test(self):
-        import greenlet
-        print( greenlet.getcurrent().value)
-        self.assertTrue(0)
+        self.assertTrue(self.added_attribute)
+        self.assertNotIn('added_attribute', self.__dict__)
+
+
+class TestTestScoped(unittest.TestCase):
+
+    @contextmanager
+    def simplest(test):
+        assert isinstance(test, unittest.TestCase)
+        test.added_attribute = 'attr'
+        yield
+
+    simplest.test_scoped = True
+
+    pony_contexts = [
+        [simplest]
+    ]
+
+    del simplest
+
+    def test(self):
+        self.assertIn('added_attribute', self.__dict__)
+
+
+class TestCliNeg(unittest.TestCase):
+
+    output = ()
+
+    @class_property
+    def cli_handle(cls):
+
+        @contextmanager
+        def simplest(test):
+            test.output = ['item']
+            yield
+        simplest.test_scoped = True
+
+        @with_cli_args
+        @click.option('--on', 'is_on', is_flag=True)
+        def handle(is_on):
+            if is_on:
+                yield simplest
+
+        return handle
+
+    @class_property
+    def pony_contexts(cls):
+        return  [
+            cls.cli_handle
+        ]
+
+
+
+    def test(self):
+        self.assertFalse(self.output)
+
+
+
+class TestCliPos(TestCliNeg):
+
+    @class_property
+    def cli_handle(cls):
+        def handle():
+            try:
+                sys.argv.append('--on')
+                return super(TestCliPos, cls).cli_handle()
+            finally:
+                sys.argv.remove('--on')
+        return handle
+
+    def test(self):
+        self.assertTrue(self.output)
+
