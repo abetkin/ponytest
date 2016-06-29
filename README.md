@@ -1,1 +1,83 @@
 # ponytest
+
+## What it is
+
+Testing utility used to test [Pony ORM](https://github.com/ponyorm/pony).
+A drop-in unittest replacement.
+
+## Motivation
+
+This piece of code was written because none of testing frameworks provided a clear way to launch the same tests with
+different setup / teardown fixtures. Specifically,
+we needed a way to run the same set of tests against different databases.
+
+```
+python -m test.utility tests --db mysql --db oracle
+```
+
+## Features
+
+With ponytest, you can:
+
+- drop into debugger on failures, including errors in methods like `setUp` and `tearDownClass`
+- launch the same set of tests with different setup / teardown fixtures
+- define test fixtures with context managers, and register them globally
+
+Ponytest is lightweight (< 200 SLOC)
+
+## Try it
+
+Debugger mode:
+
+```
+python -m ponytest <unittest args> -- --ipdb
+```
+
+Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a test) or case-scoped
+(wrapping a set of tests in a testcase class). Case-scoped is default.
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def fixture(cls):
+    print('setting up', cls)
+    cls.initialized = True
+    yield
+    print('tearing down', cls)
+
+fixture.test_scoped = False # default
+
+import unittest
+
+class MyTest(unittest.TestCase):
+
+    pony_contexts = [
+        [fixture]
+    ]
+
+    def test(self):
+        self.assertIn('initialized', self.__class__)
+```
+
+As you see, we defined our fixture with a list (`[fixture]`). That's because there could be multiple of them. In that case,
+the test would be run with every combination of fixtures. For, example, for the fixture set below
+
+```python
+pony_contexts = [
+    [fixt1],
+    [fixt2, fixt3]
+]
+```
+
+we would have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` contexts.
+
+You can also register fixtures globally (like we did with the `ipdb` fixture):
+
+```python
+from ponytest import pony_contexts # a deque
+pony_contexts.appendleft(a_fixture)
+```
+
+You can also find some examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
+and [default_contexts.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_contexts.py)

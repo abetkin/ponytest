@@ -132,7 +132,8 @@ class TestLoader(_TestLoader):
 class TestProgram(_TestProgram):
     def __init__(self, *args, **kwargs):
         try:
-            kwargs['argv'] = sys.argv[:sys.argv.index('---')]
+            kwargs['argv'] = sys.argv[:sys.argv.index('--')]
+            sys.argv.remove('--')
         except ValueError:
             pass
         kwargs['testLoader'] = TestLoader()
