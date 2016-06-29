@@ -70,7 +70,7 @@ class MyTest(unittest.TestCase):
         self.assertIn('initialized', self.__class__.__dict__)
 ```
 
-As you see, we defined our fixture with a list (`[fixture]`). That's because there can be multiple of them. For example, this will execute `test` twise:
+As you see, we defined our fixture with a list (`[fixture]`). That's because there can be multiple of them. For example, this will execute `test` twice:
 
 ```python
 pony_fixtures = [
@@ -112,7 +112,7 @@ pony_fixtures.appendleft(a_fixture)
 ```
 
 You can find more examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
-and [default_contexts.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_contexts.py) module.
+and [default_fixtures.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_fixtures.py) module.
 
 ## How it works
 
