@@ -125,3 +125,5 @@ class PONY_MyTest(MyTest):
     def test(self):
         '...'
 ```
+
+`Note:` Of course, regular test methods and the ones like `setUp` and `setUpClass` are wrapped differently.
