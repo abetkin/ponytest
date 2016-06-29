@@ -1,5 +1,5 @@
 
-from .main import pony_contexts
+from .main import pony_fixtures
 from .utils import with_cli_args, PY2
 
 
@@ -40,7 +40,7 @@ def use_ipdb_at_test_scope():
         yield mgr
 
 
-pony_contexts.extend([
+pony_fixtures.extend([
     use_ipdb,
     use_ipdb_at_test_scope,
 ])

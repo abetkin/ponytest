@@ -23,7 +23,7 @@ class TestCaseScoped(unittest.TestCase):
         cls.added_attribute = 'attr'
         yield
 
-    pony_contexts = [
+    pony_fixtures = [
         [simplest]
     ]
 
@@ -44,7 +44,7 @@ class TestTestScoped(unittest.TestCase):
 
     simplest.test_scoped = True
 
-    pony_contexts = [
+    pony_fixtures = [
         [simplest]
     ]
 
@@ -76,7 +76,7 @@ class TestCliNeg(unittest.TestCase):
         return handle
 
     @class_property
-    def pony_contexts(cls):
+    def pony_fixtures(cls):
         return  [
             cls.cli_handle
         ]

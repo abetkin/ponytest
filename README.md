@@ -41,6 +41,8 @@ Debugger mode:
 python -m ponytest <unittest args> -- --ipdb
 ```
 
+`Note:` You can pass additional attributes for ponytest after the double-dash separator (`--`)
+
 Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a test) or case-scoped
 (wrapping a set of tests in a testcase class). Case-scoped is default.
 
@@ -60,25 +62,33 @@ import unittest
 
 class MyTest(unittest.TestCase):
 
-    pony_contexts = [
+    pony_fixtures = [
         [fixture]
     ]
 
     def test(self):
-        self.assertIn('initialized', self.__class__)
+        self.assertIn('initialized', self.__class__.__dict__)
 ```
 
-As you see, we defined our fixture with a list (`[fixture]`). That's because there could be multiple of them. In that case,
-the test would be run with every combination of fixtures. For, example, for the fixture set below
+As you see, we defined our fixture with a list (`[fixture]`). That's because there can be multiple of them. For example, this will execute `test` twise:
 
 ```python
-pony_contexts = [
+pony_fixtures = [
+    [fixture, fixture]
+]
+```
+
+Of course, in a real case one would want to specify different fixtures in that list. It will cause the test to be run
+with every combination of fixtures. For, example, for the fixture set below
+
+```python
+pony_fixtures = [
     [fixt1],
     [fixt2, fixt3]
 ]
 ```
 
-we would have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` contexts.
+we will have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` fixtures.
 
 Besides a list, a fixture can be specified with a callable that returns iterable
 (in case when, say, fixture set depends on the command line arguments passed):
@@ -97,8 +107,8 @@ def use_ipdb(debug):
 You can also register fixtures globally (like it is done with the `ipdb` fixture):
 
 ```python
-from ponytest import pony_contexts # a deque
-pony_contexts.appendleft(a_fixture)
+from ponytest import pony_fixtures # a deque
+pony_fixtures.appendleft(a_fixture)
 ```
 
 You can find more examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
@@ -117,15 +127,15 @@ class PONY_MyTest(MyTest):
     @classmethod
     @wrapping_with_fixtures
     def setUpClass(cls):
-        '...'
+        ...
 
     @wrapping_with_fixtures
     def tearDown(self):
-        '...'
+        ...
 
     @wrapping_with_fixtures
     def test(self):
-        '...'
+        ...
 ```
 
 `Note:` Of course, regular test methods and the ones like `setUp` and `setUpClass` are wrapped differently.

@@ -34,7 +34,7 @@ class TestMultiple(unittest.TestCase):
         return handle()
 
     @class_property
-    def pony_contexts(cls):
+    def pony_fixtures(cls):
         try:
             length = len(sys.argv)
             sys.argv.extend(['-o', '1', '-o', '2'])

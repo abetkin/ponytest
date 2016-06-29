@@ -15,13 +15,13 @@ else:
 
 
 class TestLoader(_TestLoader):
-    pony_contexts = deque()
+    pony_fixtures = deque()
 
-    def _make_tests(self, names, klass, contexts):
-        if not contexts:
+    def _make_tests(self, names, klass, fixtures):
+        if not fixtures:
             return [klass(name) for name in names]
         test_scoped = [] # also, layers can be case-scoped (= class-scoped)
-        for Ctx in contexts:
+        for Ctx in fixtures:
             if getattr(Ctx, 'test_scoped', False):
                 test_scoped.append(Ctx)
 
@@ -39,7 +39,7 @@ class TestLoader(_TestLoader):
                     ctx = Ctx(test)
                     stack.enter_context(ctx)
                 with stack:
-                    # TODO maybe allow ctx managers proceed after test setUp
+                    # TODO maybe allow ctx managers that execute after test setUp?
                     _setUp(test)
                     stacks[test._testMethodName] = stack.pop_all()
             dic['setUp'] = setUp
@@ -61,14 +61,14 @@ class TestLoader(_TestLoader):
                 if PY2:
                     func = func.__func__
                 @wraps(func)
-                def wrapper(test, _wrapped=func, *arg, **kw):
+                def wrapper(test, *arg, **kw):
                     stack = stacks[test._testMethodName]
                     with stack:
-                        _wrapped(test, *arg, **kw)
+                        func(test, *arg, **kw)
                         stacks[test._testMethodName] = stack.pop_all()
                 dic[name] = wrapper
 
-        case_scoped = [Ctx for Ctx in contexts if Ctx not in test_scoped]
+        case_scoped = [Ctx for Ctx in fixtures if Ctx not in test_scoped]
 
         if case_scoped:
             stack_holder = [ExitStack()]
@@ -118,8 +118,8 @@ class TestLoader(_TestLoader):
 
     def get_fixture_chains(self, klass):
         fixture_sets = []
-        pony_contexts = getattr(klass, 'pony_contexts', self.pony_contexts)
-        for ctx in pony_contexts:
+        pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
+        for ctx in pony_fixtures:
             if not isinstance(ctx, Iterable):
                 ctx = ctx()
             fixtures = tuple(ctx)
@@ -143,5 +143,5 @@ class TestProgram(_TestProgram):
         kwargs['testLoader'] = TestLoader()
         super(TestProgram, self).__init__(*args, **kwargs)
 
-pony_contexts = TestLoader.pony_contexts
+pony_fixtures = TestLoader.pony_fixtures
 
