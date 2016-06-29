@@ -113,15 +113,15 @@ that wraps test methods of the parent:
 class PONY_MyTest(MyTest):
 
     @classmethod
-    @wrapping.with.fixtures
+    @wrapping_with_fixtures
     def setUpClass(cls):
         '...'
 
-    @wrapping.with.fixtures
+    @wrapping_with_fixtures
     def tearDown(self):
         '...'
 
-    @wrapping.with.fixtures
+    @wrapping_with_fixtures
     def test(self):
         '...'
 ```
