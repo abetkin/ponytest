@@ -99,9 +99,9 @@ and [default_contexts.py](https://github.com/abetkin/ponytest/blob/master/ponyte
 ## How it works
 
 As you probably presumed, `unittest` is not designed to be extended. Ponytest therefore (almost)
-doesn't mess with the testing machinery of `unittest`, overriding single
-`loadTestsFromTestCase` method of the test loader. It creates a subclass of the testcase passed,
-wrapping its test methods.
+doesn't mess with the testing machinery of `unittest`. It overrides single
+`loadTestsFromTestCase` method of the test loader, creating a subclass of the testcase passed,
+that wraps test methods of the parent:
 
 ```python
 class PONY_MyTest(MyTest):
