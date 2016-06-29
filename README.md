@@ -95,3 +95,27 @@ pony_contexts.appendleft(a_fixture)
 
 You can find more examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
 and [default_contexts.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_contexts.py) module.
+
+## How it works
+
+As you probably presumed, `unittest` is not designed to be extended. Ponytest therefore (almost)
+doesn't mess with the testing machinery of `unittest`, overriding single
+`loadTestsFromTestCase` method of the test loader. It creates a subclass of the testcase passed,
+wrapping its test methods.
+
+```python
+class PONY_MyTest(MyTest):
+
+    @classmethod
+    @wrapping.with.fixtures
+    def setUpClass(cls):
+        '...'
+
+    @wrapping.with.fixtures
+    def tearDown(self):
+        '...'
+
+    @wrapping.with.fixtures
+    def test(self):
+        '...'
+```
