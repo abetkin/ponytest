@@ -45,7 +45,7 @@ python -m ponytest <unittest args> -- --ipdb
 
 Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a single test)
 or class-scoped (wrapping all tests in a testcase class). Default is test-scoped.
-To make a fixture class-scoped set `class_scoped` attribute to a true value.
+Use `fixture.class_scoped = True` to change that.
 
 ```python
 from contextlib import contextmanager
