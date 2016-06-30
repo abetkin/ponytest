@@ -20,9 +20,9 @@ class TestLoader(_TestLoader):
     def _make_tests(self, names, klass, fixtures):
         if not fixtures:
             return [klass(name) for name in names]
-        test_scoped = [] # also, layers can be case-scoped (= class-scoped)
+        test_scoped = []
         for Ctx in fixtures:
-            if getattr(Ctx, 'test_scoped', False):
+            if not getattr(Ctx, 'class_scoped', False):
                 test_scoped.append(Ctx)
 
         dic = {}
@@ -69,9 +69,9 @@ class TestLoader(_TestLoader):
                         stacks[test._testMethodName] = stack.pop_all()
                 dic[name] = wrapper
 
-        case_scoped = [Ctx for Ctx in fixtures if Ctx not in test_scoped]
+        class_scoped = [Ctx for Ctx in fixtures if Ctx not in test_scoped]
 
-        if case_scoped:
+        if class_scoped:
             stack_holder = [ExitStack()]
 
             _setUpClass = klass.setUpClass.__func__
@@ -79,7 +79,7 @@ class TestLoader(_TestLoader):
             def setUpClass(cls, *arg, **kw):
                 stack = stack_holder[0]
                 with stack:
-                    for Ctx in case_scoped:
+                    for Ctx in class_scoped:
                         ctx = Ctx(cls)
                         stack.enter_context(ctx)
 

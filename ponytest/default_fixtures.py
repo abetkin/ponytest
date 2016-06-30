@@ -3,8 +3,6 @@ from .main import pony_fixtures
 from .utils import with_cli_args, PY2
 
 
-# register default layers
-
 from functools import partial
 import click
 
@@ -15,7 +13,7 @@ else:
 
 
 @contextmanager
-def ipdb_context(cls):
+def ipdb_fixture(test):
     import ipdb
     raised = []
     with ipdb.launch_ipdb_on_exception():
@@ -31,16 +29,16 @@ def ipdb_context(cls):
 @click.option('--ipdb', 'debug', is_flag=True)
 def use_ipdb(debug):
     if debug:
-        yield ipdb_context
+        yield ipdb_fixture
 
-def use_ipdb_at_test_scope():
+def use_ipdb_at_class_scope():
     for mgr in use_ipdb():
         mgr = partial(mgr)
-        mgr.test_scoped = True
+        mgr.class_scoped = True
         yield mgr
 
 
 pony_fixtures.extendleft([
+    use_ipdb_at_class_scope,
     use_ipdb,
-    use_ipdb_at_test_scope,
 ])
