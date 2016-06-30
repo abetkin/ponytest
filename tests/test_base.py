@@ -22,6 +22,8 @@ class TestCaseScoped(unittest.TestCase):
         assert isinstance(cls, type)
         cls.added_attribute = 'attr'
         yield
+    
+    simplest.class_scoped = True
 
     pony_fixtures = [
         [simplest]
@@ -41,8 +43,6 @@ class TestTestScoped(unittest.TestCase):
         assert isinstance(test, unittest.TestCase)
         test.added_attribute = 'attr'
         yield
-
-    simplest.test_scoped = True
 
     pony_fixtures = [
         [simplest]
@@ -65,7 +65,6 @@ class TestCliNeg(unittest.TestCase):
         def simplest(test):
             test.output = ['item']
             yield
-        simplest.test_scoped = True
 
         @with_cli_args
         @click.option('--on', 'is_on', is_flag=True)

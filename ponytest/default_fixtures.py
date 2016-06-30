@@ -33,14 +33,14 @@ def use_ipdb(debug):
     if debug:
         yield ipdb_context
 
-def use_ipdb_at_test_scope():
+def use_ipdb_at_class_scope():
     for mgr in use_ipdb():
         mgr = partial(mgr)
-        mgr.test_scoped = True
+        mgr.class_scoped = True
         yield mgr
 
 
 pony_fixtures.extendleft([
+    use_ipdb_at_class_scope,
     use_ipdb,
-    use_ipdb_at_test_scope,
 ])

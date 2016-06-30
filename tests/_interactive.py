@@ -10,7 +10,7 @@ from contextlib import contextmanager
 def use_log(test):
     raise Exception
 
-use_log.test_scoped = True
+use_log.class_scoped = True
 
 
 import unittest

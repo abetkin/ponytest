@@ -43,20 +43,21 @@ python -m ponytest <unittest args> -- --ipdb
 
 `Note:` You can pass additional arguments for ponytest after the double-dash separator (`--`)
 
-Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a test) or case-scoped
-(wrapping a set of tests in a testcase class). Case-scoped is default.
+Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a single test)
+or class-scoped (wrapping all tests in a testcase class). Default is test-scoped.
+To make a fixture class-scoped set `class_scoped` attribute to a true value.
 
 ```python
 from contextlib import contextmanager
 
 @contextmanager
-def fixture(cls):
-    print('setting up', cls)
-    cls.initialized = True
+def fixture(test):
+    print('setting up', test._testMethodName)
+    test.initialized = True
     yield
-    print('tearing down', cls)
+    print('tearing down', test._testMethodName)
 
-fixture.test_scoped = False # default
+fixture.class_scoped = False # could omit this
 
 import unittest
 
@@ -67,7 +68,7 @@ class MyTest(unittest.TestCase):
     ]
 
     def test(self):
-        self.assertIn('initialized', self.__class__.__dict__)
+        self.assertTrue(self.initialized)
 ```
 
 As you see, we defined our fixture with a list (`[fixture]`). That's because there can be multiple of them. For example, this will execute `test` twice:

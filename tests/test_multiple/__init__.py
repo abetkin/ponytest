@@ -23,7 +23,6 @@ class TestMultiple(unittest.TestCase):
             if option:
                 test.option_value = option
             yield
-        simplest.test_scoped = True
 
         @with_cli_args
         @click.option('-o', '--option', 'options', multiple=True)
