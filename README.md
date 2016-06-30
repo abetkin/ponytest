@@ -102,7 +102,7 @@ from ponytest import with_cli_args
 @click.option('--ipdb', 'debug', is_flag=True)
 def use_ipdb(debug):
     if debug:
-        yield ipdb_context
+        yield ipdb_fixture
 
 # And later
 pony_fixtures = [
