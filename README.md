@@ -142,6 +142,8 @@ class MyTest(unittest.TestCase):
     pony_fixtures.extend(extra_fixtures)
 ```
 
+## Examples
+
 You can find more examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
 and [default_fixtures.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_fixtures.py) module.
 
