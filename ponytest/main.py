@@ -95,8 +95,13 @@ class TestLoader(_TestLoader):
                     return _tearDownClass(cls, *arg, **kw)
             dic['tearDownClass'] = classmethod(tearDownClass)
 
-        type_name = 'PONY_' + klass.__name__
+        fixture_names = tuple(
+            f.fixture_name
+            for f in fixtures if getattr(f, 'fixture_name', None)
+        )
+        type_name = '_'.join((klass.__name__, 'with') + fixture_names)
         new_klass = type(type_name, (klass,), dic)
+        new_klass.__module__ = klass.__module__
         return [new_klass(name) for name in names]
 
     def loadTestsFromTestCase(self, testCaseClass):
