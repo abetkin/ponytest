@@ -43,6 +43,8 @@ python -m ponytest <unittest args> -- --ipdb
 
 `Note:` You can pass additional arguments for ponytest after the double-dash separator (`--`)
 
+## Writing fixtures
+
 Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a single test)
 or class-scoped (wrapping all tests in a testcase class). Default is test-scoped.
 Use `fixture.class_scoped = True` to change that.
@@ -119,6 +121,8 @@ ERROR: tearDownClass (my.test.Case_with_myfixture)
 ```
 
 In the example above the value of `fixture_name` was set to `"myfixture"`.
+
+## Registering fixtures globally
 
 You can also register fixtures globally (like it is done with the `ipdb` fixture):
 
