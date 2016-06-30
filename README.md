@@ -110,6 +110,16 @@ pony_fixtures = [
 ]
 ```
 
+Fixture can define `fixture_name` attribute. If it does, that name will make part of the test class name:
+
+```
+======================================================================
+ERROR: tearDownClass (my.test.Case_with_myfixture)
+----------------------------------------------------------------------
+```
+
+In the example above the value of `fixture_name` was set to `"myfixture"`.
+
 You can also register fixtures globally (like it is done with the `ipdb` fixture):
 
 ```python
