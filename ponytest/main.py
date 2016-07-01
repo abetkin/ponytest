@@ -99,7 +99,9 @@ class TestLoader(_TestLoader):
             f.fixture_name
             for f in fixtures if getattr(f, 'fixture_name', None)
         )
-        type_name = '_'.join((klass.__name__, 'with') + fixture_names)
+        type_name = '%s_' % klass.__name__
+        if fixture_names:
+           type_name  = '%swith_%s' % (type_name, '_'.join(fixture_names))
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
         return [new_klass(name) for name in names]
