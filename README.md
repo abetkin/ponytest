@@ -128,10 +128,11 @@ You can also register fixtures globally (like it is done with the `ipdb` fixture
 
 ```python
 from ponytest import pony_fixtures # a deque
-pony_fixtures.appendleft(use_ipdb)
+pony_fixtures.append(use_ipdb)
 ```
 
-Note that `use_ipdb` was appended to the left of the deque, which will let you debug your own fixtures.
+Note that `use_ipdb` was appended to the right end of the deque,
+so that to keep all contexts available in the debug session.
 
 Ponytest will look for declared `pony_fixtures` attribute in the test class, otherwise will use `ponytest.pony_fixtures`.
 You surely can extend the fixture set for a testcase:
