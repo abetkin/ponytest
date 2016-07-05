@@ -1,6 +1,6 @@
 
 import sys
-from unittest import suite, TestProgram as _TestProgram
+from unittest import suite, TestProgram as _TestProgram, SkipTest
 from unittest.loader import TestLoader as _TestLoader
 
 from functools import wraps
@@ -77,6 +77,13 @@ class TestLoader(_TestLoader):
             @wraps(_setUp)
             def setUp(test):
                 stack = stacks[test._testMethodName]
+                try:
+                    for Ctx in test_scoped:
+                        Ctx(test)
+                except SkipTest:
+                    # FIXME impl better
+                    raise
+
                 with stack:
                     for Ctx in test_scoped:
                         ctx = Ctx(test)
@@ -120,11 +127,17 @@ class TestLoader(_TestLoader):
             @wraps(_setUpClass)
             def setUpClass(cls, *arg, **kw):
                 stack = stack_holder[0]
+                try:
+                    for Ctx in class_scoped:
+                        Ctx(cls)
+                except SkipTest:
+                    # FIXME impl better
+                    raise
+
                 with stack:
                     for Ctx in class_scoped:
                         ctx = Ctx(cls)
                         stack.enter_context(ctx)
-
                     _setUpClass(cls, *arg, **kw)
                     stack_holder[0] = stack.pop_all()
             dic['setUpClass'] = classmethod(setUpClass)
