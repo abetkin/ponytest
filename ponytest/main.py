@@ -13,9 +13,51 @@ if not PY2:
 else:
     from contextlib2 import contextmanager, ExitStack
 
+import types
+from unittest import case
 
 class TestLoader(_TestLoader):
     pony_fixtures = deque()
+
+    def loadTestsFromName(self, name, module=None):
+        parts = name.split('.')
+        if module is None:
+            parts_copy = parts[:]
+            while parts_copy:
+                try:
+                    module = __import__('.'.join(parts_copy))
+                    break
+                except ImportError:
+                    del parts_copy[-1]
+                    if not parts_copy:
+                        raise
+            parts = parts[1:]
+        obj = module
+        for part in parts:
+            parent, obj = obj, getattr(obj, part)
+
+        if isinstance(obj, types.ModuleType):
+            return self.loadTestsFromModule(obj)
+        elif isinstance(obj, type) and issubclass(obj, case.TestCase):
+            return self.loadTestsFromTestCase(obj)
+        elif (callable(obj) and
+              isinstance(parent, type) and
+              issubclass(parent, case.TestCase)):
+            name = parts[-1]
+
+            suites = []
+            for chain in self.get_fixture_chains(parent):
+                tests = self._make_tests([name], parent, chain)
+                suites.append(
+                    self.suiteClass(tests)
+                )
+            if not suites:
+                return super(TestLoader, self).loadTestsFromName(
+                    name, module
+                )
+            if len(suites) > 1:
+                return self.suiteClass(suites)
+            return suites[0]
 
     def _make_tests(self, names, klass, fixtures):
         if not fixtures:
@@ -99,9 +141,9 @@ class TestLoader(_TestLoader):
             f.fixture_name
             for f in fixtures if getattr(f, 'fixture_name', None)
         )
-        type_name = '%s_' % klass.__name__
+        type_name = klass.__name__
         if fixture_names:
-           type_name  = '%swith_%s' % (type_name, '_'.join(fixture_names))
+           type_name  = '_'.join((type_name, 'with') + fixture_names)
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
         return [new_klass(name) for name in names]
