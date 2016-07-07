@@ -62,6 +62,10 @@ class TestLoader(_TestLoader):
     def _make_tests(self, names, klass, fixtures):
         if not fixtures:
             return [klass(name) for name in names]
+
+        wrappers = [f for f in fixtures if getattr(f, 'is_wrapper', False)]
+        fixtures = [f for f in fixtures if not f in wrappers]
+
         test_scoped = []
         for Ctx in fixtures:
             if not getattr(Ctx, 'class_scoped', False):
@@ -116,6 +120,8 @@ class TestLoader(_TestLoader):
                     with stack:
                         _test_func(test, *arg, **kw)
                         stacks[test._testMethodName] = stack.pop_all()
+                for transform in wrappers:
+                    wrapper = transform(wrapper)
                 dic[name] = wrapper
 
         class_scoped = [Ctx for Ctx in fixtures if Ctx not in test_scoped]
