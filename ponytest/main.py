@@ -111,10 +111,10 @@ class TestLoader(_TestLoader):
                 if PY2:
                     func = func.__func__
                 @wraps(func)
-                def wrapper(test, *arg, **kw):
+                def wrapper(test, _test_func=func, *arg, **kw):
                     stack = stacks[test._testMethodName]
                     with stack:
-                        func(test, *arg, **kw)
+                        _test_func(test, *arg, **kw)
                         stacks[test._testMethodName] = stack.pop_all()
                 dic[name] = wrapper
 
