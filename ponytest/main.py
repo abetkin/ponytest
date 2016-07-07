@@ -72,7 +72,7 @@ class TestLoader(_TestLoader):
                 test_scoped.append(Ctx)
 
         dic = {}
-        if test_scoped:
+        if test_scoped or wrappers:
             stacks = {name: ExitStack() for name in names}
 
             _setUp = klass.setUp
@@ -109,8 +109,6 @@ class TestLoader(_TestLoader):
             dic['tearDown'] = tearDown
 
             for name in names:
-                if not test_scoped:
-                    break
                 func = getattr(klass, name)
                 if PY2:
                     func = func.__func__
