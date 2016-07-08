@@ -43,8 +43,17 @@ class class_property(object):
         return self.func(cls)
 
 
+def with_metaclass(meta, *bases):
+    base_marker = [object]
+    class __metaclass__(meta):
+        def __new__(cls, name, this_bases, d):
+            if this_bases is base_marker:
+                return type.__new__(cls, name, tuple(this_bases), d)
+            return meta(name, bases, d)
+    return __metaclass__('<dummy_class>', base_marker, {})
 
-class ContextManager(abc.ABC):
+
+class ContextManager(with_metaclass(abc.ABCMeta)):
     # Taken from Python 3.6 (contextlib).
 
     def __enter__(self):
@@ -56,7 +65,7 @@ class ContextManager(abc.ABC):
 
     @classmethod
     def __subclasshook__(cls, C):
-        if cls is AbstractContextManager:
+        if cls is ContextManager:
             if (any("__enter__" in B.__dict__ for B in C.__mro__) and
                 any("__exit__" in B.__dict__ for B in C.__mro__)):
                 return True

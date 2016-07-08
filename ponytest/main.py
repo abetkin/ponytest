@@ -47,8 +47,8 @@ class TestLoader(_TestLoader):
 
             suites = []
             for chain in self.get_fixture_chains(parent):
-                suite = self._make_suite([name], parent, chain)
-                suites.append(suite)
+                s = self._make_suite([name], parent, chain)
+                suites.append(s)
             if not suites:
                 return super(TestLoader, self).loadTestsFromName(
                     name, module
@@ -96,9 +96,6 @@ class TestLoader(_TestLoader):
                         ctx = Ctx(test)
                         if isinstance(ctx, ContextManager):
                             stack.enter_context(ctx)
-                        else:
-                            assert callable(ctx)
-                            test_wrappers.append(ctx)
 
                     # TODO maybe allow ctx managers that execute after test setUp?
                     _setUp(test)
@@ -136,6 +133,13 @@ class TestLoader(_TestLoader):
             stack_holder = [ExitStack()]
 
             _setUpClass = klass.setUpClass.__func__
+
+            for Ctx in class_scoped:
+                ctx = Ctx(klass)
+                if not isinstance(ctx, ContextManager):
+                    assert callable(ctx)
+                    suite_wrappers.append(ctx)
+
             @wraps(_setUpClass)
             def setUpClass(cls, *arg, **kw):
                 stack = stack_holder[0]
@@ -152,9 +156,6 @@ class TestLoader(_TestLoader):
                         ctx = Ctx(cls)
                         if isinstance(ctx, ContextManager):
                             stack.enter_context(ctx)
-                        else:
-                            assert callable(ctx)
-                            suite_wrappers.append(ctx)
                     _setUpClass(cls, *arg, **kw)
                     stack_holder[0] = stack.pop_all()
             dic['setUpClass'] = classmethod(setUpClass)
@@ -176,12 +177,14 @@ class TestLoader(_TestLoader):
            type_name  = '_'.join((type_name, 'with') + fixture_names)
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
-        suite = self.suiteClass(
+        s = self.suiteClass(
             [new_klass(name) for name in names]
         )
+        if not suite_wrappers:
+            return s
         for transform in suite_wrappers:
-            suite = transform(suite)
-        return suite
+            s = transform(s)
+        return self.suiteClass([s])
 
     # 1. TODO pass class to fixture's invoke method
     # fixtures to be accessible from class automatically (?)
@@ -195,8 +198,8 @@ class TestLoader(_TestLoader):
             testCaseNames = ['runTest']
         suites = []
         for chain in self.get_fixture_chains(testCaseClass):
-            suite = self._make_suite(testCaseNames, testCaseClass, chain)
-            suites.append(suite)
+            s = self._make_suite(testCaseNames, testCaseClass, chain)
+            suites.append(s)
         if not suites:
             return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
         if len(suites) > 1:
