@@ -1,6 +1,8 @@
 import sys
 import click
 
+import abc
+
 from functools import partial, wraps
 
 PY2 = sys.version_info[0] == 2
@@ -39,3 +41,23 @@ class class_property(object):
 
     def __get__(self, obj, cls):
         return self.func(cls)
+
+
+
+class ContextManager(abc.ABC):
+    # Taken from Python 3.6 (contextlib).
+
+    def __enter__(self):
+        return self
+
+    @abc.abstractmethod
+    def __exit__(self, exc_type, exc_value, traceback):
+        return None
+
+    @classmethod
+    def __subclasshook__(cls, C):
+        if cls is AbstractContextManager:
+            if (any("__enter__" in B.__dict__ for B in C.__mro__) and
+                any("__exit__" in B.__dict__ for B in C.__mro__)):
+                return True
+        return NotImplemented

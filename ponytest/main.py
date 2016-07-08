@@ -165,6 +165,11 @@ class TestLoader(_TestLoader):
         new_klass.__module__ = klass.__module__
         return [new_klass(name) for name in names]
 
+    # 1. TODO pass class to fixture's invoke method
+    # fixtures to be accessible from class automatically (?) 
+    # 2. if is contextmanager
+
+
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)
         testCaseNames = self.getTestCaseNames(testCaseClass)
