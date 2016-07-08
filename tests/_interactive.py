@@ -8,7 +8,10 @@ from contextlib import contextmanager
 
 @contextmanager
 def use_log(test):
-    raise Exception
+    print('start logging')
+    # assert 0
+    yield
+    print('end logging')
 
 use_log.class_scoped = True
 

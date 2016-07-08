@@ -25,9 +25,12 @@ def ipdb_fixture(test):
     if raised:
         raise raised[0]
 
-@with_cli_args
-@click.option('--ipdb', 'debug', is_flag=True)
+
+@with_cli_args(groups=['debug', 'debug2'])
+@click.option('--ipdb', 'debug', is_flag=1)
+@click.option('--ipdb', 'debug2', )
 def use_ipdb(debug):
+    import ipdb; ipdb.set_trace()
     if debug:
         yield ipdb_fixture
 
@@ -42,3 +45,7 @@ pony_fixtures.extendleft([
     use_ipdb_at_class_scope,
     use_ipdb,
 ])
+
+
+# TODO use nested list structure, make flat later ? weights!
+# new_list = [1, rest, 2]

@@ -22,7 +22,7 @@ class TestCaseScoped(unittest.TestCase):
         assert isinstance(cls, type)
         cls.added_attribute = 'attr'
         yield
-    
+
     simplest.class_scoped = True
 
     pony_fixtures = [

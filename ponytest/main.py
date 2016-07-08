@@ -58,13 +58,9 @@ class TestLoader(_TestLoader):
             return suites[0]
 
     def _make_suite(self, names, klass, fixtures):
+        tests = [klass(name) for name in names]
         if not fixtures:
-            return self.suiteClass(
-                [klass(name) for name in names]
-            )
-
-        # wrappers = [f for f in fixtures if getattr(f, 'is_wrapper', False)]
-        # fixtures = [f for f in fixtures if not f in wrappers]
+            return self.suiteClass(tests)
 
         test_scoped = []
         for Ctx in fixtures:
@@ -84,18 +80,14 @@ class TestLoader(_TestLoader):
             @wraps(_setUp)
             def setUp(test):
                 stack = stacks[test._testMethodName]
-                try:
-                    for Ctx in test_scoped:
-                        Ctx(test)
-                except SkipTest:
-                    # FIXME impl better
-                    raise
-
                 with stack:
                     for Ctx in test_scoped:
                         ctx = Ctx(test)
                         if isinstance(ctx, ContextManager):
                             stack.enter_context(ctx)
+                        else:
+                            assert callable(ctx)
+                            test_wrappers.append(ctx)
 
                     # TODO maybe allow ctx managers that execute after test setUp?
                     _setUp(test)
@@ -120,42 +112,23 @@ class TestLoader(_TestLoader):
                 def wrapper(test, _test_func=func, *arg, **kw):
                     stack = stacks[test._testMethodName]
                     with stack:
+                        for transform in test_wrappers:
+                            _test_func = transform(_test_func)
                         _test_func(test, *arg, **kw)
                         stacks[test._testMethodName] = stack.pop_all()
-                for transform in test_wrappers:
-                    wrapper = transform(wrapper)
+
                 dic[name] = wrapper
 
-        class_scoped = [Ctx for Ctx in fixtures if Ctx not in test_scoped]
-        suite_wrappers = []
-
-        if class_scoped:
+        if any(f not in test_scoped for f in fixtures):
             stack_holder = [ExitStack()]
-
             _setUpClass = klass.setUpClass.__func__
-
-            for Ctx in class_scoped:
-                ctx = Ctx(klass)
-                if not isinstance(ctx, ContextManager):
-                    assert callable(ctx)
-                    suite_wrappers.append(ctx)
 
             @wraps(_setUpClass)
             def setUpClass(cls, *arg, **kw):
                 stack = stack_holder[0]
-                try:
-                    for Ctx in class_scoped:
-                        Ctx(cls)
-                except SkipTest:
-                    # FIXME impl better
-                    # TODO remove ?
-                    raise
-
                 with stack:
-                    for Ctx in class_scoped:
-                        ctx = Ctx(cls)
-                        if isinstance(ctx, ContextManager):
-                            stack.enter_context(ctx)
+                    for ctx in suite_contexts:
+                        stack.enter_context(ctx)
                     _setUpClass(cls, *arg, **kw)
                     stack_holder[0] = stack.pop_all()
             dic['setUpClass'] = classmethod(setUpClass)
@@ -177,6 +150,20 @@ class TestLoader(_TestLoader):
            type_name  = '_'.join((type_name, 'with') + fixture_names)
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
+
+        suite_contexts = []
+        suite_wrappers = []
+
+        for Ctx in fixtures:
+            if Ctx in test_scoped:
+                continue
+            ctx = Ctx(new_klass)
+            if isinstance(ctx, ContextManager):
+                suite_contexts.append(ctx)
+            else:
+                assert callable(ctx)
+                suite_wrappers.append(ctx)
+
         s = self.suiteClass(
             [new_klass(name) for name in names]
         )
@@ -185,11 +172,6 @@ class TestLoader(_TestLoader):
         for transform in suite_wrappers:
             s = transform(s)
         return self.suiteClass([s])
-
-    # 1. TODO pass class to fixture's invoke method
-    # fixtures to be accessible from class automatically (?)
-    # 2. if is contextmanager
-
 
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)
@@ -219,9 +201,14 @@ class TestLoader(_TestLoader):
                 fixture_sets.append(fixtures)
         ret = []
         for fixture_chain in product(*fixture_sets):
-            ret.append(
-                tuple(fixture_chain)
-            )
+            fixture_chain = tuple(f for f in fixture_chain if f is not None)
+            for f in fixture_chain:
+                if not hasattr(f, 'validate'):
+                    continue
+                if not f.validate(fixture_chain, klass):
+                    break
+            else:
+                ret.append(fixture_chain)
         return ret
 
 
