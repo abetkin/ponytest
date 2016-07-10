@@ -26,18 +26,25 @@ def ipdb_fixture(test):
         raise raised[0]
 
 
-@with_cli_args(groups=['debug', 'debug2'])
-@click.option('--ipdb', 'debug', is_flag=1)
-@click.option('--ipdb', 'debug2', )
+@with_cli_args
+@click.option('--ipdb-all', 'debug', flag_value='all')
+@click.option('--ipdb', 'debug', flag_value='tests')
 def use_ipdb(debug):
-    import ipdb; ipdb.set_trace()
-    if debug:
+    if debug == 'tests':
         yield ipdb_fixture
+        ipdb_fixture.weight = 100
+    elif  debug == 'all':
+        yield ipdb_fixture
+        ipdb_fixture.weight = -100
+
 
 def use_ipdb_at_class_scope():
     for mgr in use_ipdb():
+        weight = getattr(mgr, 'weight', None)
         mgr = partial(mgr)
         mgr.class_scoped = True
+        if weight is not None:
+            mgr.weight = weight
         yield mgr
 
 

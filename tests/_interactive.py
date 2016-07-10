@@ -9,7 +9,7 @@ from contextlib import contextmanager
 @contextmanager
 def use_log(test):
     print('start logging')
-    # assert 0
+    assert 0
     yield
     print('end logging')
 

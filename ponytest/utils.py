@@ -20,19 +20,13 @@ def with_cli_args(func):
         'ignore_unknown_options': True,
     })(args_getter)
     getter_cmd.params.extend(func.__click_params__)
-    getter_cmd = partial(getter_cmd, standalone_mode=False)
-
-    import ipdb; ipdb.set_trace()
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        import ipdb
-        with ipdb.launch_ipdb_on_exception():
-
-            kwargs.update(
-                getter_cmd()
-            )
-            return func(*args, **kwargs)
+        kwargs.update(
+            getter_cmd(standalone_mode=False)
+        )
+        return func(*args, **kwargs)
     return wrapper
 
 

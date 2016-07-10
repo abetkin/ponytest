@@ -201,13 +201,14 @@ class TestLoader(_TestLoader):
                 fixture_sets.append(fixtures)
         ret = []
         for fixture_chain in product(*fixture_sets):
-            fixture_chain = tuple(f for f in fixture_chain if f is not None)
+            fixture_chain = [f for f in fixture_chain if f is not None]
             for f in fixture_chain:
                 if not hasattr(f, 'validate'):
                     continue
                 if not f.validate(fixture_chain, klass):
                     break
             else:
+                fixture_chain.sort(key=lambda f: getattr(f, 'weight', 0))
                 ret.append(fixture_chain)
         return ret
 
