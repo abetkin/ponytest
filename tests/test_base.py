@@ -102,3 +102,8 @@ class TestCliPos(TestCliNeg):
     def test(self):
         self.assertTrue(self.output)
 
+
+class RegularTest(unittest.TestCase):
+
+    def test(self):
+        self.assertTrue(1)

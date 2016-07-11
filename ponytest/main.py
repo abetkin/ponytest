@@ -16,6 +16,7 @@ else:
 import types
 from unittest import case
 
+
 class TestLoader(_TestLoader):
     pony_fixtures = deque()
 
@@ -45,8 +46,12 @@ class TestLoader(_TestLoader):
               issubclass(parent, case.TestCase)):
             name = parts[-1]
 
+            fixture_chains = self.get_fixture_chains(parent)
+            if not fixture_chains:
+                return self.suiteClass([])
+
             suites = []
-            for chain in self.get_fixture_chains(parent):
+            for chain in fixture_chains:
                 s = self._make_suite([name], parent, chain)
                 suites.append(s)
             if not suites:
@@ -178,8 +183,12 @@ class TestLoader(_TestLoader):
         testCaseNames = self.getTestCaseNames(testCaseClass)
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
+        fixture_chains = self.get_fixture_chains(testCaseClass)
+        if not fixture_chains:
+            return self.suiteClass([])
+
         suites = []
-        for chain in self.get_fixture_chains(testCaseClass):
+        for chain in fixture_chains:
             s = self._make_suite(testCaseNames, testCaseClass, chain)
             suites.append(s)
         if not suites:
@@ -202,10 +211,11 @@ class TestLoader(_TestLoader):
         ret = []
         for fixture_chain in product(*fixture_sets):
             fixture_chain = [f for f in fixture_chain if f is not None]
-            for f in fixture_chain:
+            for f in tuple(fixture_chain):
                 if not hasattr(f, 'validate'):
                     continue
-                if not f.validate(fixture_chain, klass):
+                fixture_chain = f.validate(fixture_chain, klass)
+                if fixture_chain is None:
                     break
             else:
                 fixture_chain.sort(key=lambda f: getattr(f, 'weight', 0))
