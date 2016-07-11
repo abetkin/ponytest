@@ -1,5 +1,7 @@
 # ponytest
 
+# TODO callables, weights, examples
+
 ## What it is
 
 Testing utility used to test [Pony ORM](https://github.com/ponyorm/pony).
@@ -45,9 +47,12 @@ python -m ponytest <unittest args> -- --ipdb
 
 ## Writing fixtures
 
-Ponytest lets you define fixtures with contextmanagers. Fixtures can be either test-scoped (wrapping a single test)
-or class-scoped (wrapping all tests in a testcase class). Default is test-scoped.
+Test fixture can be either a context manager (with `__enter__` and `__exit__` methods doing setup and teardown)
+or a callable-wrapper (`new_test = fixture(test)`). Both can be either test-scoped (wrapping a single test)
+or class-scoped (wrapping a testsuite formed from a testcase class). Default is test-scoped.
 Use `fixture.class_scoped = True` to change that.
+
+Let's see some examples.
 
 ```python
 from contextlib import contextmanager

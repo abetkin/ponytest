@@ -48,11 +48,7 @@ def use_ipdb_at_class_scope():
         yield mgr
 
 
-pony_fixtures.extendleft([
+pony_fixtures.extend([
     use_ipdb_at_class_scope,
     use_ipdb,
 ])
-
-
-# TODO use nested list structure, make flat later ? weights!
-# new_list = [1, rest, 2]
