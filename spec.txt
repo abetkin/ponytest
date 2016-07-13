@@ -1,0 +1,4 @@
+TODO: Do not generate TestCase dynamically, use
+
+class TestCase(unittest.TestCase):
+    ...
