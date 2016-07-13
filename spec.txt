@@ -2,3 +2,20 @@ TODO: Do not generate TestCase dynamically, use
 
 class TestCase(unittest.TestCase):
     ...
+
+
+---
+
+def test(self):
+    with self.get_fixture('NAME') as res:
+        1
+
+---
+
+Think: fixture set: iterable ?
+
+----
+
+test_scoped = ['drop_db']
+
+---
