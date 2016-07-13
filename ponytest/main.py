@@ -65,36 +65,36 @@ class TestLoader(_TestLoader):
     class SetupTeardownFixture(object):
         test = None
         weight = 100
-        
+
         def __init__(self, setUpFunc, tearDownFunc):
             self.setUpFunc = setUpFunc
             self.tearDownFunc = tearDownFunc
-        
+
         def __call__(self, test):
             self.test = test
             return self
 
         def __enter__(self):
             self.setUpFunc(self.test)
-        
+
         def __exit__(self, *exc_info):
             self.tearDownFunc(self.test)
-        
+
     def _sorted(self, fixtures):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
 
 
     def _make_suite(self, names, klass, fixtures):
-        tests = [klass(name) for name in names]
-        if not fixtures:
-            return self.suiteClass(tests)
+        dic = {
+            'fixtures': fixtures,
+        }
+        if hasattr(klass, 'exclude_fixtures'):
+            fixtures = [f for f in fixtures if getattr(f, 'KEY', NotImplemented) not in klass.exclude_fixtures]
 
         test_scoped = []
         for Ctx in fixtures:
             if not getattr(Ctx, 'class_scoped', False):
                 test_scoped.append(Ctx)
-
-        dic = {}
 
         test_wrappers = []
 
@@ -116,7 +116,7 @@ class TestLoader(_TestLoader):
             with stack:
                 for Ctx in self._sorted(test_scoped):
                     ctx = Ctx(test)
-                    
+
                     if isinstance(ctx, ContextManager):
                         stack.enter_context(ctx)
                     else:
@@ -125,7 +125,7 @@ class TestLoader(_TestLoader):
                 stacks[test._testMethodName] = stack.pop_all()
         dic['setUp'] = setUp
 
-        
+
         def tearDown(test):
             stack = stacks[test._testMethodName]
             stack.close()
@@ -148,13 +148,6 @@ class TestLoader(_TestLoader):
 
         stack_holder = [ExitStack()]
 
-        _setUpClass = klass.setUpClass.__func__
-        _tearDownClass = klass.tearDownClass.__func__
-        suite_contexts = []
-        suite_contexts.append(
-            self.SetupTeardownFixture(_setUpClass, _tearDownClass)
-        )
-
         def setUpClass(cls, *arg, **kw):
             stack = stack_holder[0]
             with stack:
@@ -163,11 +156,10 @@ class TestLoader(_TestLoader):
                 stack_holder[0] = stack.pop_all()
         dic['setUpClass'] = classmethod(setUpClass)
 
-        
+
         def tearDownClass(cls, *arg, **kw):
             stack = stack_holder[0]
-            with stack:
-                return _tearDownClass(cls, *arg, **kw)
+            stack.close()
         dic['tearDownClass'] = classmethod(tearDownClass)
 
         fixture_names = tuple(
@@ -178,13 +170,15 @@ class TestLoader(_TestLoader):
         if fixture_names:
            type_name  = '_'.join((type_name, 'with') + fixture_names)
 
-        dic.update({
-            'fixtures': fixtures
-        })
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
 
-        
+        _setUpClass = klass.setUpClass.__func__
+        _tearDownClass = klass.tearDownClass.__func__
+        Fixture = self.SetupTeardownFixture(_setUpClass, _tearDownClass)
+        suite_contexts = [
+            Fixture(new_klass)
+        ]
         suite_wrappers = []
 
         for Ctx in fixtures:
