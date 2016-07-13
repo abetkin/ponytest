@@ -1,7 +1,5 @@
 # ponytest
 
-# TODO callables, weights, examples
-
 ## What it is
 
 Testing utility used to test [Pony ORM](https://github.com/ponyorm/pony).
