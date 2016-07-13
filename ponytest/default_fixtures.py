@@ -32,10 +32,10 @@ def ipdb_fixture(test):
 def use_ipdb(debug):
     if debug == 'tests':
         yield ipdb_fixture
-        ipdb_fixture.weight = 100
+        ipdb_fixture.weight = 10
     elif  debug == 'all':
         yield ipdb_fixture
-        ipdb_fixture.weight = -100
+        ipdb_fixture.weight = -10
 
 
 def use_ipdb_at_class_scope():
