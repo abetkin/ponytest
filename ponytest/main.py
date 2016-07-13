@@ -84,6 +84,24 @@ class TestLoader(_TestLoader):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
 
 
+    def _is_test_scoped(self, fixture, klass):
+        if hasattr(fixture, 'KEY'):
+            if fixture.KEY in getattr(klass, 'test_scoped', ()):
+                return True
+            if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
+                    and  fixture.KEY in getattr(klass, 'class_scoped', ()):
+                return False
+        return not getattr(fixture, 'class_scoped', False)
+
+    def _is_class_scoped(self, fixture, klass):
+        if hasattr(fixture, 'KEY'):
+            if fixture.KEY in getattr(klass, 'class_scoped', ()):
+                return True
+            if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
+                    and  fixture.KEY in getattr(klass, 'test_scoped', ()):
+                return False
+        return getattr(fixture, 'class_scoped', False)
+
     def _make_suite(self, names, klass, fixtures):
         dic = {
             'fixtures': fixtures,
@@ -93,7 +111,7 @@ class TestLoader(_TestLoader):
 
         test_scoped = []
         for Ctx in fixtures:
-            if not getattr(Ctx, 'class_scoped', False):
+            if self._is_test_scoped(Ctx, klass):
                 test_scoped.append(Ctx)
 
         test_wrappers = []
@@ -181,8 +199,10 @@ class TestLoader(_TestLoader):
         ]
         suite_wrappers = []
 
+        # do the same as with tests
+
         for Ctx in fixtures:
-            if Ctx in test_scoped:
+            if not self._is_class_scoped(Ctx, klass):
                 continue
             ctx = Ctx(new_klass)
             if isinstance(ctx, ContextManager):
@@ -194,11 +214,17 @@ class TestLoader(_TestLoader):
         s = self.suiteClass(
             [new_klass(name) for name in names]
         )
-        if not suite_wrappers:
-            return s
+        # descriptor ?
+        def suite(cls, *args):
+            s = self.suiteClass(
+                [cls(name) for name in names]
+            )
+            s(*args)
+
         for transform in self._sorted(suite_wrappers):
-            s = transform(s)
-        return self.suiteClass([s])
+            suite = transform(suite)
+
+        return self.suiteClass([new_klass.suite]) # s = classmethod
 
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)
