@@ -25,6 +25,7 @@ def SetupTeardownFixture(setUpFunc, tearDownFunc):
             yield
         finally:
             tearDownFunc(test)
+    fixture.weight = 10
     return fixture
 
 
