@@ -156,7 +156,7 @@ class TestLoader(_TestLoader):
 
         def suite(cls, result):
             cls._result = result
-            def func():
+            def func(cls):
                 s = self.suiteClass(
                     [cls(name) for name in names]
                 )
@@ -164,7 +164,7 @@ class TestLoader(_TestLoader):
             for F in self._sorted(class_scoped):
                 wrapper = F(cls)
                 func = wrapper(func)
-            func()
+            func(cls)
 
         dic['suite'] = classmethod(suite)
 
