@@ -80,7 +80,8 @@ class TestLoader(_TestLoader):
 
 
     def _sorted(self, fixtures):
-        return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
+        return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0),
+                      reverse=True)
 
 
     def _is_test_scoped(self, fixture, klass):
@@ -104,9 +105,6 @@ class TestLoader(_TestLoader):
 
 
     def _make_suite(self, names, klass, fixtures):
-        # wrappers only
-
-
         dic = {
             'fixtures': fixtures,
             'setUp': empty, 'tearDown': empty,
@@ -123,9 +121,6 @@ class TestLoader(_TestLoader):
                 test_scoped.append(F)
             if self._is_class_scoped(F, klass):
                 class_scoped.append(F)
-
-
-        # stacks = {name: ExitStack() for name in names}
 
         _setUp = klass.setUp
         if PY2:
@@ -145,27 +140,6 @@ class TestLoader(_TestLoader):
         )
 
 
-
-        # def setUp(test):
-        #     stack = stacks[test._testMethodName]
-        #     with stack:
-        #         for Ctx in self._sorted(test_scoped):
-        #             ctx = Ctx(test)
-
-        #             if isinstance(ctx, ContextManager):
-        #                 stack.enter_context(ctx)
-        #             else:
-        #                 assert callable(ctx)
-        #                 test_wrappers.append(ctx)
-        #         stacks[test._testMethodName] = stack.pop_all()
-        # dic['setUp'] = setUp
-
-
-        # def tearDown(test):
-        #     stack = stacks[test._testMethodName]
-        #     stack.close()
-        # dic['tearDown'] = tearDown
-
         for name in names:
             func = getattr(klass, name)
             if PY2:
@@ -178,26 +152,6 @@ class TestLoader(_TestLoader):
                 _test_func(test, )
 
             dic[name] = wrapper
-
-        # stack_holder = [ExitStack()]
-
-        # def setUpClass(cls, *arg, **kw):
-        #     stack = stack_holder[0]
-        #     with stack:
-        #         for F in self._sorted(class_scoped):
-        #             fixture = F(cls)
-        #             if not isinstance(fixture, ContextManager):
-        #                 suite_wrappers.append(fixture)
-        #             else:
-        #                 stack.enter_context(fixture)
-        #         stack_holder[0] = stack.pop_all()
-        # dic['setUpClass'] = classmethod(setUpClass)
-
-        # def tearDownClass(cls, *arg, **kw):
-        #     stack = stack_holder[0]
-        #     stack.close()
-        # dic['tearDownClass'] = classmethod(tearDownClass)
-
 
         def suite(cls, result):
             cls._result = result
