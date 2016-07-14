@@ -9,12 +9,27 @@ from collections import deque, Iterable
 
 from .utils import PY2, ContextManager
 if not PY2:
-    from contextlib import contextmanager, ExitStack
+    from contextlib import contextmanager, ExitStack, ContextDecorator
 else:
-    from contextlib2 import contextmanager, ExitStack
+    from contextlib2 import contextmanager, ExitStack, ContextDecorator
 
 import types
 from unittest import case
+
+
+def SetupTeardownFixture(setUpFunc, tearDownFunc):
+    @contextmanager
+    def fixture(test):
+        try:
+            setUpFunc(test)
+            yield
+        finally:
+            tearDownFunc(test)
+    return fixture
+
+
+def empty(test):
+    pass
 
 
 class TestLoader(_TestLoader):
@@ -62,23 +77,7 @@ class TestLoader(_TestLoader):
                 return self.suiteClass(suites)
             return suites[0]
 
-    class SetupTeardownFixture(object):
-        test = None
-        weight = 100
 
-        def __init__(self, setUpFunc, tearDownFunc):
-            self.setUpFunc = setUpFunc
-            self.tearDownFunc = tearDownFunc
-
-        def __call__(self, test):
-            self.test = test
-            return self
-
-        def __enter__(self):
-            self.setUpFunc(self.test)
-
-        def __exit__(self, *exc_info):
-            self.tearDownFunc(self.test)
 
     def _sorted(self, fixtures):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
@@ -102,21 +101,31 @@ class TestLoader(_TestLoader):
                 return False
         return getattr(fixture, 'class_scoped', False)
 
+
+
     def _make_suite(self, names, klass, fixtures):
+        # wrappers only
+
+
         dic = {
             'fixtures': fixtures,
+            'setUp': empty, 'tearDown': empty,
+            'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
         }
         if hasattr(klass, 'exclude_fixtures'):
             fixtures = [f for f in fixtures if getattr(f, 'KEY', NotImplemented) not in klass.exclude_fixtures]
 
         test_scoped = []
-        for Ctx in fixtures:
-            if self._is_test_scoped(Ctx, klass):
-                test_scoped.append(Ctx)
+        class_scoped = []
 
-        test_wrappers = []
+        for F in fixtures:
+            if self._is_test_scoped(F, klass):
+                test_scoped.append(F)
+            if self._is_class_scoped(F, klass):
+                class_scoped.append(F)
 
-        stacks = {name: ExitStack() for name in names}
+
+        # stacks = {name: ExitStack() for name in names}
 
         _setUp = klass.setUp
         if PY2:
@@ -126,59 +135,83 @@ class TestLoader(_TestLoader):
             _tearDown = _tearDown.__func__
 
         test_scoped.append(
-            self.SetupTeardownFixture(_setUp, _tearDown)
+            SetupTeardownFixture(_setUp, _tearDown)
         )
 
-        def setUp(test):
-            stack = stacks[test._testMethodName]
-            with stack:
-                for Ctx in self._sorted(test_scoped):
-                    ctx = Ctx(test)
-
-                    if isinstance(ctx, ContextManager):
-                        stack.enter_context(ctx)
-                    else:
-                        assert callable(ctx)
-                        test_wrappers.append(ctx)
-                stacks[test._testMethodName] = stack.pop_all()
-        dic['setUp'] = setUp
+        _setUpClass = klass.setUpClass.__func__
+        _tearDownClass = klass.tearDownClass.__func__
+        class_scoped.append(
+            SetupTeardownFixture(_setUpClass, _tearDownClass)
+        )
 
 
-        def tearDown(test):
-            stack = stacks[test._testMethodName]
-            stack.close()
-        dic['tearDown'] = tearDown
+
+        # def setUp(test):
+        #     stack = stacks[test._testMethodName]
+        #     with stack:
+        #         for Ctx in self._sorted(test_scoped):
+        #             ctx = Ctx(test)
+
+        #             if isinstance(ctx, ContextManager):
+        #                 stack.enter_context(ctx)
+        #             else:
+        #                 assert callable(ctx)
+        #                 test_wrappers.append(ctx)
+        #         stacks[test._testMethodName] = stack.pop_all()
+        # dic['setUp'] = setUp
+
+
+        # def tearDown(test):
+        #     stack = stacks[test._testMethodName]
+        #     stack.close()
+        # dic['tearDown'] = tearDown
 
         for name in names:
             func = getattr(klass, name)
             if PY2:
                 func = func.__func__
             @wraps(func)
-            def wrapper(test, _test_func=func, *arg, **kw):
-                stack = stacks[test._testMethodName]
-                with stack:
-                    for transform in self._sorted(test_wrappers):
-                        _test_func = transform(_test_func)
-                    _test_func(test, *arg, **kw)
-                    stacks[test._testMethodName] = stack.pop_all()
+            def wrapper(test, _test_func=func):
+                for F in self._sorted(test_scoped):
+                    transform = F(test)
+                    _test_func = transform(_test_func)
+                _test_func(test, )
 
             dic[name] = wrapper
 
-        stack_holder = [ExitStack()]
+        # stack_holder = [ExitStack()]
 
-        def setUpClass(cls, *arg, **kw):
-            stack = stack_holder[0]
-            with stack:
-                for ctx in self._sorted(suite_contexts):
-                    stack.enter_context(ctx)
-                stack_holder[0] = stack.pop_all()
-        dic['setUpClass'] = classmethod(setUpClass)
+        # def setUpClass(cls, *arg, **kw):
+        #     stack = stack_holder[0]
+        #     with stack:
+        #         for F in self._sorted(class_scoped):
+        #             fixture = F(cls)
+        #             if not isinstance(fixture, ContextManager):
+        #                 suite_wrappers.append(fixture)
+        #             else:
+        #                 stack.enter_context(fixture)
+        #         stack_holder[0] = stack.pop_all()
+        # dic['setUpClass'] = classmethod(setUpClass)
+
+        # def tearDownClass(cls, *arg, **kw):
+        #     stack = stack_holder[0]
+        #     stack.close()
+        # dic['tearDownClass'] = classmethod(tearDownClass)
 
 
-        def tearDownClass(cls, *arg, **kw):
-            stack = stack_holder[0]
-            stack.close()
-        dic['tearDownClass'] = classmethod(tearDownClass)
+        def suite(cls, result):
+            cls._result = result
+            def func():
+                s = self.suiteClass(
+                    [cls(name) for name in names]
+                )
+                s(result)
+            for F in self._sorted(class_scoped):
+                wrapper = F(cls)
+                func = wrapper(func)
+            func()
+
+        dic['suite'] = classmethod(suite)
 
         fixture_names = tuple(
             f.fixture_name
@@ -191,40 +224,7 @@ class TestLoader(_TestLoader):
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
 
-        _setUpClass = klass.setUpClass.__func__
-        _tearDownClass = klass.tearDownClass.__func__
-        Fixture = self.SetupTeardownFixture(_setUpClass, _tearDownClass)
-        suite_contexts = [
-            Fixture(new_klass)
-        ]
-        suite_wrappers = []
-
-        # do the same as with tests
-
-        for Ctx in fixtures:
-            if not self._is_class_scoped(Ctx, klass):
-                continue
-            ctx = Ctx(new_klass)
-            if isinstance(ctx, ContextManager):
-                suite_contexts.append(ctx)
-            else:
-                assert callable(ctx)
-                suite_wrappers.append(ctx)
-
-        s = self.suiteClass(
-            [new_klass(name) for name in names]
-        )
-        # descriptor ?
-        def suite(cls, *args):
-            s = self.suiteClass(
-                [cls(name) for name in names]
-            )
-            s(*args)
-
-        for transform in self._sorted(suite_wrappers):
-            suite = transform(suite)
-
-        return self.suiteClass([new_klass.suite]) # s = classmethod
+        return self.suiteClass([new_klass.suite])
 
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)
