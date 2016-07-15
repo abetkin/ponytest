@@ -14,7 +14,7 @@ else:
     from contextlib2 import contextmanager, ExitStack, ContextDecorator
 
 import types
-from unittest import case
+import unittest
 
 
 def SetupTeardownFixture(setUpFunc, tearDownFunc):
@@ -25,7 +25,7 @@ def SetupTeardownFixture(setUpFunc, tearDownFunc):
             yield
         finally:
             tearDownFunc(test)
-    fixture.weight = 10
+    fixture.weight = 20
     return fixture
 
 
@@ -55,11 +55,11 @@ class TestLoader(_TestLoader):
 
         if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
-        elif isinstance(obj, type) and issubclass(obj, case.TestCase):
+        elif isinstance(obj, type) and issubclass(obj, unittest.TestCase):
             return self.loadTestsFromTestCase(obj)
         elif (callable(obj) and
               isinstance(parent, type) and
-              issubclass(parent, case.TestCase)):
+              issubclass(parent, unittest.TestCase)):
             name = parts[-1]
 
             fixture_chains = self.get_fixture_chains(parent)
@@ -103,7 +103,14 @@ class TestLoader(_TestLoader):
                 return False
         return getattr(fixture, 'class_scoped', False)
 
-
+    def _handle_excluded(self, fixtures, Test):
+        excluded = getattr(Test, 'exclude_fixtures', ())
+        if not isinstance(Test, type):
+            method = getattr(Test, Test._testMethodName)
+            excluded = getattr(method, 'exclude_fixtures', excluded)
+        return [
+            f for f in fixtures if getattr(f, 'KEY', NotImplemented) not in excluded
+        ]
 
     def _make_suite(self, names, klass, fixtures):
         dic = {
@@ -111,9 +118,6 @@ class TestLoader(_TestLoader):
             'setUp': empty, 'tearDown': empty,
             'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
         }
-        if hasattr(klass, 'exclude_fixtures'):
-            fixtures = [f for f in fixtures if getattr(f, 'KEY', NotImplemented) not in klass.exclude_fixtures]
-
         test_scoped = []
         class_scoped = []
 
@@ -147,26 +151,34 @@ class TestLoader(_TestLoader):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                for F in self._sorted(test_scoped):
+                fixtures = self._handle_excluded(test_scoped, test)
+                for F in self._sorted(fixtures):
                     transform = F(test)
                     _test_func = transform(_test_func)
                 _test_func(test, )
 
             dic[name] = wrapper
 
-        def suite(cls, result):
+        def case(cls, result):
             cls._result = result
             def func(cls):
                 s = self.suiteClass(
                     [cls(name) for name in names]
                 )
                 s(result)
-            for F in self._sorted(class_scoped):
+            fixtures = self._handle_excluded(class_scoped, cls)
+            for F in self._sorted(fixtures):
                 wrapper = F(cls)
                 func = wrapper(func)
-            func(cls)
 
-        dic['suite'] = classmethod(suite)
+            Case = type(cls.__name__, (unittest.TestCase,), {
+                'case': lambda t: func(cls),
+            })
+            Case.__module__ = cls.__module__
+            case = Case('case')
+            case(result)
+
+        dic['case'] = classmethod(case)
 
         fixture_names = tuple(
             f.fixture_name
@@ -179,7 +191,7 @@ class TestLoader(_TestLoader):
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
 
-        return self.suiteClass([new_klass.suite])
+        return self.suiteClass([new_klass.case])
 
     def loadTestsFromTestCase(self, testCaseClass):
         assert not issubclass(testCaseClass, suite.TestSuite)

@@ -28,3 +28,6 @@ related fixtures:
 include_fixtures ?
 
 ----
+
+generic way to enable / disable fixtures (cli)
+
