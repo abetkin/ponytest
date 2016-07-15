@@ -5,11 +5,11 @@
 
 #     def __enter__(self):
 #         1
-    
+
 #     @class_property
 #     def enabled(cls): # by default
 #         1
-    
+
 #     @class_property
 #     def variants(cls):
 #         ...
@@ -29,11 +29,15 @@ class Test(unittest.TestCase):
 class Variant(object):
     # KEY = 'common'
     # VARIANT = 'postgresql'
-    
+
     def validate(fixture_chain, klass):
         return fixture_chain
 
-    
+
+'''
+-- --with ipdb eee --without rglkmeg
+'''
+
 
 
 @fi_list.register_fixt('fi')
@@ -44,9 +48,10 @@ class Variant(object):
     @class_property
     def variants(cls):
         1
-    
+
     @class_property
-    def enabled(cls):
+    @with_cli_args
+    def enabled(cls, opt):
         1
 
 @fi_list.register_fixt('fi')
@@ -65,3 +70,9 @@ class T:
         db = self.fixtures['init_db']
         # Test.fixtures
 
+
+    exclude_fixtures = ['FI']
+
+    def opt_2(self):
+        with self.fixture('FI'): # unfiltered: contains all fixt.
+            'do'

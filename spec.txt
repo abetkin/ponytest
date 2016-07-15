@@ -10,10 +10,6 @@ def test(self):
     with self.get_fixture('NAME') as res:
         1
 
----
-
-Think: fixture set: iterable ?
-
 ----
 
 1. class_scoped -> default_scopes = ['class']
@@ -30,4 +26,6 @@ include_fixtures ?
 ----
 
 generic way to enable / disable fixtures (cli)
+
+--db sqlite,postgres --ipdb --log
 
