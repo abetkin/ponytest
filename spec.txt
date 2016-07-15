@@ -29,3 +29,6 @@ generic way to enable / disable fixtures (cli)
 
 --db sqlite,postgres --ipdb --log
 
+----
+
+if no wrappers, use ExitStack
