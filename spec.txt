@@ -16,15 +16,7 @@ Think: fixture set: iterable ?
 
 ----
 
-test_scoped = ['drop_db']
-
----
-
-since all fixtures wrap tests, maybe we don't need to pass test as __init__ argument ?
-
-----
-
-class_scoped -> default_scopes = ['class']
+1. class_scoped -> default_scopes = ['class']
 
 ---
 
@@ -36,5 +28,3 @@ related fixtures:
 include_fixtures ?
 
 ----
-
-invoke fixture on demand
