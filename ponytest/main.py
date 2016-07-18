@@ -17,6 +17,17 @@ import types
 import unittest
 
 
+from collections import OrderedDict
+
+class FixturesRegistry(OrderedDict):
+
+    def register(self, KEY):
+        def decorate(create_func):
+            self[KEY] = create_func
+            return create_func
+        return decorate
+
+
 def SetupTeardownFixture(setUpFunc, tearDownFunc):
     @contextmanager
     def fixture(test):
@@ -34,7 +45,7 @@ def empty(test):
 
 
 class TestLoader(_TestLoader):
-    pony_fixtures = deque()
+    pony_fixtures = FixturesRegistry()
 
     def loadTestsFromName(self, name, module=None):
         parts = name.split('.')
@@ -144,7 +155,6 @@ class TestLoader(_TestLoader):
             SetupTeardownFixture(_setUpClass, _tearDownClass)
         )
 
-
         for name in names:
             func = getattr(klass, name)
             if PY2:
@@ -170,7 +180,6 @@ class TestLoader(_TestLoader):
             for F in self._sorted(fixtures):
                 wrapper = F(cls)
                 func = wrapper(func)
-
             Case = type(cls.__name__, (unittest.TestCase,), {
                 'case': lambda t: func(cls),
             })
@@ -216,11 +225,25 @@ class TestLoader(_TestLoader):
 
     def get_fixture_chains(self, klass):
         fixture_sets = []
+        # fixtures are registered globally, ref by KEY
         pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
-        for ctx in pony_fixtures:
-            if not isinstance(ctx, Iterable):
-                ctx = ctx()
-            fixtures = tuple(ctx)
+        include_fixtures = getattr(klass, 'include_fixtures', {})
+
+        _processed = set()
+        for KEY, iterable in pony_fixtures.items():
+            if isinstance(KEY, tuple):
+                assert len(KEY) == 2
+                KEY = KEY[0]
+                if KEY in _processed:
+                    continue
+                _processed.add(KEY)
+            variants = include_fixtures.get(KEY)
+            if variants is not None:
+                fixtures = [pony_fixtures[KEY, k] for k in variants]
+            elif not isinstance(iterable, Iterable):
+                fixtures = list(iterable())
+            else:
+                fixtures = list(iterable)
             if fixtures:
                 fixture_sets.append(fixtures)
         ret = []

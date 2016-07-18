@@ -1,7 +1,7 @@
 
 from functools import wraps
 import click
-from ponytest.utils import with_cli_args, class_property
+from ponytest import with_cli_args, class_property, pony_fixtures
 
 import sys
 PY2 = sys.version_info[0] == 2
@@ -13,9 +13,13 @@ else:
 
 
 import unittest
+import collections
 
+from copy import copy
 
 class TestCaseScoped(unittest.TestCase):
+
+    pony_fixtures = copy(pony_fixtures)
 
     @contextmanager
     def simplest(cls):
@@ -25,9 +29,7 @@ class TestCaseScoped(unittest.TestCase):
 
     simplest.class_scoped = True
 
-    pony_fixtures = [
-        [simplest]
-    ]
+    pony_fixtures['simplest'] = [simplest]
 
     del simplest
 
@@ -44,10 +46,8 @@ class TestTestScoped(unittest.TestCase):
         test.added_attribute = 'attr'
         yield
 
-    pony_fixtures = [
-        [simplest]
-    ]
-
+    pony_fixtures = copy(pony_fixtures)
+    pony_fixtures['simplest'] = [simplest]
     del simplest
 
     def test(self):
@@ -72,15 +72,13 @@ class TestCliNeg(unittest.TestCase):
             if is_on:
                 yield simplest
 
+
         return handle
+
 
     @class_property
     def pony_fixtures(cls):
-        return  [
-            cls.cli_handle
-        ]
-
-
+        return collections.OrderedDict(pony_fixtures, simplest=cls.cli_handle)
 
     def test(self):
         self.assertFalse(self.output)

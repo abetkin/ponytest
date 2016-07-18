@@ -31,12 +31,11 @@ def ipdb_fixture(test):
 @click.option('--ipdb', 'debug', flag_value='tests')
 def use_ipdb(debug):
     if debug == 'tests':
-        yield ipdb_fixture
         ipdb_fixture.weight = 10
-    elif  debug == 'all':
         yield ipdb_fixture
+    elif debug == 'all':
         ipdb_fixture.weight = -10
-
+        yield ipdb_fixture
 
 def use_ipdb_at_class_scope():
     for mgr in use_ipdb():
@@ -48,7 +47,8 @@ def use_ipdb_at_class_scope():
         yield mgr
 
 
-pony_fixtures.extend([
-    use_ipdb_at_class_scope,
-    use_ipdb,
+
+pony_fixtures.update([
+    ('ipdb_all', use_ipdb_at_class_scope),
+    ('ipdb', use_ipdb),
 ])

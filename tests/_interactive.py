@@ -3,8 +3,10 @@
 # Not actually automatic tests
 #
 
-from contextlib import contextmanager
+from contextlib2 import contextmanager
+from ponytest import pony_fixtures
 
+from copy import copy
 
 @contextmanager
 def use_log(test):
@@ -20,8 +22,8 @@ import unittest
 
 class TestDebug(unittest.TestCase):
 
-    from ponytest import pony_fixtures
-    pony_fixtures.append([use_log])
+    pony_fixtures = copy(pony_fixtures)
+    # pony_fixtures['log'] = [use_log]
 
 
     @classmethod
