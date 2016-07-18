@@ -7,7 +7,7 @@ from functools import wraps
 from itertools import product
 from collections import deque, Iterable
 
-from .utils import PY2, ContextManager
+from .utils import PY2, ContextManager, cached_property
 if not PY2:
     from contextlib import contextmanager, ExitStack, ContextDecorator
 else:
@@ -21,10 +21,22 @@ from collections import OrderedDict
 
 class FixturesRegistry(OrderedDict):
 
-    def register(self, KEY):
-        def decorate(create_func):
-            self[KEY] = create_func
-            return create_func
+    def __init__(self, *args, **kwargs):
+        super(FixturesRegistry, self).__init__(*args, **kwargs)
+        self.implementations = OrderedDict()
+
+    def implements(self, fixture, key=None):
+        def decorator(obj, key=key):
+            if key is None:
+                key = obj.KEY
+            self.implementations[fixture, key] = obj
+            return obj
+        return decorator
+
+    def register(self, key):
+        def decorate(obj):
+            self[key] = obj
+            return obj
         return decorate
 
 
@@ -229,7 +241,14 @@ class TestLoader(_TestLoader):
         pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
         include_fixtures = getattr(klass, 'include_fixtures', {})
 
-        _processed = set()
+        def iter_fixtures():
+            for k, v in pony_fixtures.items():
+                yield k, v
+            _processed = {}
+            for (k, _), F in pony_fixtures.implementations.items():
+                # if
+                variants = include_fixtures.get(KEY)
+
         for KEY, iterable in pony_fixtures.items():
             if isinstance(KEY, tuple):
                 assert len(KEY) == 2

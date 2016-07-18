@@ -14,8 +14,6 @@ from functools import partial
 
 from copy import copy
 
-# reg implementations
-
 class Option(ContextDecorator):
     def __init__(self, test, name):
         self.name = name
@@ -66,9 +64,8 @@ class TestMultiple(unittest.TestCase):
 class Test(TestMultiple):
 
     pony_fixtures = copy(pony_fixtures)
-
-    pony_fixtures['myfixture', '1'] = partial(Option, name='1')
-    pony_fixtures['myfixture', '2'] = partial(Option, name='2')
+    pony_fixtures.implements('myfixture')(partial(Option, name='1'))
+    pony_fixtures.implements('myfixture')(partial(Option, name='2'))
 
     include_fixtures = {
         'myfixture': '2'
