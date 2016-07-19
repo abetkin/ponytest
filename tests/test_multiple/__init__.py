@@ -31,26 +31,28 @@ class Option(ContextDecorator):
 @with_cli_args
 @click.option('-o', '--option', 'options', multiple=True)
 def cli(options):
-    for option in options:
-        yield partial(Option, name=option)
+    return options
 
 
+
+pony_fixtures.providers['myfixture'] = {
+    '1': partial(Option, name='1'),
+    '2': partial(Option, name='2'),
+}
 
 
 class TestMultiple(unittest.TestCase):
-
-
 
     output = []
 
     @class_property
     def pony_fixtures(cls):
-        ret = copy(pony_fixtures)
         try:
             length = len(sys.argv)
             sys.argv.extend(['-o', '1', '-o', '2'])
-            ret['myfixture'] = list(cli())
-            return ret
+            return pony_fixtures.merge({
+                'myfixture': cli()
+            })
         finally:
             sys.argv = sys.argv[:length]
 
@@ -63,13 +65,9 @@ class TestMultiple(unittest.TestCase):
 
 class Test(TestMultiple):
 
-    pony_fixtures = copy(pony_fixtures)
-    pony_fixtures.implements('myfixture')(partial(Option, name='1'))
-    pony_fixtures.implements('myfixture')(partial(Option, name='2'))
-
-    include_fixtures = {
-        'myfixture': '2'
-    }
+    pony_fixtures = pony_fixtures.merge({
+        'myfixture': ['2']
+    })
 
     def test(self):
         self.assertTrue(self.option_value == '2')

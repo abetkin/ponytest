@@ -3,7 +3,13 @@
 # Not actually automatic tests
 #
 
-from contextlib2 import contextmanager
+from ponytest.utils import PY2
+
+if PY2:
+    from contextlib2 import contextmanager
+else:
+    from contextlib import contextmanager
+
 from ponytest import pony_fixtures
 
 from copy import copy
@@ -23,7 +29,7 @@ import unittest
 class TestDebug(unittest.TestCase):
 
     pony_fixtures = copy(pony_fixtures)
-    # pony_fixtures['log'] = [use_log]
+    pony_fixtures['log'] = [use_log]
 
 
     @classmethod

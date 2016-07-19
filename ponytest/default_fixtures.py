@@ -48,7 +48,7 @@ def use_ipdb_at_class_scope():
 
 
 
-pony_fixtures.update([
-    ('ipdb_all', use_ipdb_at_class_scope),
-    ('ipdb', use_ipdb),
-])
+pony_fixtures.update({
+    'ipdb_all': use_ipdb_at_class_scope,
+    'ipdb': use_ipdb,
+})

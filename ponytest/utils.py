@@ -69,3 +69,7 @@ class ContextManager(with_metaclass(abc.ABCMeta)):
                 any("__exit__" in B.__dict__ for B in C.__mro__)):
                 return True
         return NotImplemented
+
+
+class ValidationError(Exception):
+    pass

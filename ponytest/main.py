@@ -7,7 +7,7 @@ from functools import wraps
 from itertools import product
 from collections import deque, Iterable
 
-from .utils import PY2, ContextManager, cached_property
+from .utils import PY2, ContextManager, ValidationError
 if not PY2:
     from contextlib import contextmanager, ExitStack, ContextDecorator
 else:
@@ -18,26 +18,43 @@ import unittest
 
 
 from collections import OrderedDict
+from copy import copy
 
 class FixturesRegistry(OrderedDict):
 
     def __init__(self, *args, **kwargs):
+        self.providers = kwargs.pop('providers', {})
         super(FixturesRegistry, self).__init__(*args, **kwargs)
-        self.implementations = OrderedDict()
 
-    def implements(self, fixture, key=None):
-        def decorator(obj, key=key):
-            if key is None:
-                key = obj.KEY
-            self.implementations[fixture, key] = obj
+    def provider(self):
+        def decorator(obj):
+            fixture = obj.KEY
+            provider = getattr(obj, 'PROVIDER', None)
+            if provider is None:
+                provider = getattr(obj, '__name__', None)
+            self.providers.setdefault(fixture, {}) \
+                [provider] = obj
             return obj
         return decorator
 
-    def register(self, key):
-        def decorate(obj):
-            self[key] = obj
-            return obj
-        return decorate
+    def __copy__(self):
+        return self.__class__(self, providers=self.providers)
+
+    def merge(self, obj, append_left=False):
+        if isinstance(obj, dict):
+            obj = obj.items()
+        to_merge = self.__class__(providers=self.providers)
+        for item in obj:
+            if not isinstance(obj, tuple):
+                obj = (obj, {})
+            key, config = item
+            to_merge[key] = config
+        if append_left:
+            ret = copy(self)
+            ret.update(to_merge)
+            return ret
+        to_merge.update(self)
+        return to_merge
 
 
 def SetupTeardownFixture(setUpFunc, tearDownFunc):
@@ -106,7 +123,6 @@ class TestLoader(_TestLoader):
     def _sorted(self, fixtures):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0),
                       reverse=True)
-
 
     def _is_test_scoped(self, fixture, klass):
         if hasattr(fixture, 'KEY'):
@@ -219,7 +235,7 @@ class TestLoader(_TestLoader):
         testCaseNames = self.getTestCaseNames(testCaseClass)
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
-        fixture_chains = self.get_fixture_chains(testCaseClass)
+        fixture_chains = list(self.iter_fixture_chains(testCaseClass))
         if not fixture_chains:
             return self.suiteClass([])
 
@@ -235,48 +251,31 @@ class TestLoader(_TestLoader):
             ret = suites[0]
         return ret
 
-    def get_fixture_chains(self, klass):
-        fixture_sets = []
-        # fixtures are registered globally, ref by KEY
+    def iter_fixture_chains(self, klass):
+        provider_sets = [l for l in self.iter_provider_sets(klass) if l]
+        for fixture_chain in product(*provider_sets):
+            try:
+                fixture_chain = [
+                    f for f in fixture_chain if f is not None
+                    if not hasattr(f, 'validate') or f.validate(fixture_chain, klass)
+                ]
+            except ValidationError:
+                continue
+            yield fixture_chain
+
+    def iter_provider_sets(self, klass):
         pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
-        include_fixtures = getattr(klass, 'include_fixtures', {})
+        for key, providers in pony_fixtures.items():
+            if callable(providers):
+                providers = providers()
+            if providers is not None:
+                yield [
+                    p if callable(p) else pony_fixtures.providers[key][p]
+                    for p in providers
+                ]
+                continue
+            yield pony_fixtures.providers[key].values()
 
-        def iter_fixtures():
-            for k, v in pony_fixtures.items():
-                yield k, v
-            _processed = {}
-            for (k, _), F in pony_fixtures.implementations.items():
-                # if
-                variants = include_fixtures.get(KEY)
-
-        for KEY, iterable in pony_fixtures.items():
-            if isinstance(KEY, tuple):
-                assert len(KEY) == 2
-                KEY = KEY[0]
-                if KEY in _processed:
-                    continue
-                _processed.add(KEY)
-            variants = include_fixtures.get(KEY)
-            if variants is not None:
-                fixtures = [pony_fixtures[KEY, k] for k in variants]
-            elif not isinstance(iterable, Iterable):
-                fixtures = list(iterable())
-            else:
-                fixtures = list(iterable)
-            if fixtures:
-                fixture_sets.append(fixtures)
-        ret = []
-        for fixture_chain in product(*fixture_sets):
-            fixture_chain = [f for f in fixture_chain if f is not None]
-            for f in tuple(fixture_chain):
-                if not hasattr(f, 'validate'):
-                    continue
-                fixture_chain = f.validate(fixture_chain, klass)
-                if fixture_chain is None:
-                    break
-            else:
-                ret.append(fixture_chain)
-        return ret
 
 
 class TestProgram(_TestProgram):

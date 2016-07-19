@@ -19,8 +19,6 @@ from copy import copy
 
 class TestCaseScoped(unittest.TestCase):
 
-    pony_fixtures = copy(pony_fixtures)
-
     @contextmanager
     def simplest(cls):
         assert isinstance(cls, type)
@@ -29,7 +27,9 @@ class TestCaseScoped(unittest.TestCase):
 
     simplest.class_scoped = True
 
-    pony_fixtures['simplest'] = [simplest]
+    pony_fixtures = pony_fixtures.merge({
+        1: [simplest]
+    })
 
     del simplest
 
@@ -46,9 +46,10 @@ class TestTestScoped(unittest.TestCase):
         test.added_attribute = 'attr'
         yield
 
-    pony_fixtures = copy(pony_fixtures)
-    pony_fixtures['simplest'] = [simplest]
-    del simplest
+    pony_fixtures = pony_fixtures.merge({
+        1: [simplest]
+    })
+
 
     def test(self):
         self.assertIn('added_attribute', self.__dict__)
@@ -78,7 +79,7 @@ class TestCliNeg(unittest.TestCase):
 
     @class_property
     def pony_fixtures(cls):
-        return collections.OrderedDict(pony_fixtures, simplest=cls.cli_handle)
+        return pony_fixtures.merge({0: cls.cli_handle})
 
     def test(self):
         self.assertFalse(self.output)

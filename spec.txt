@@ -14,16 +14,7 @@ def test(self):
 
 1. class_scoped -> default_scopes = ['class']
 
----
 
-related fixtures:
-'separate_process', 'init_db', 'generated_mapping'
-
-----
-
-include_fixtures ?
-
-----
 
 generic way to enable / disable fixtures (cli)
 
@@ -32,3 +23,4 @@ generic way to enable / disable fixtures (cli)
 ----
 
 if no wrappers, use ExitStack
+
