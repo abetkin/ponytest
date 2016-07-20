@@ -131,14 +131,6 @@ class TestLoader(_TestLoader):
                 return False
         return getattr(fixture, 'class_scoped', False)
 
-    def _handle_excluded(self, fixtures, Test):
-        excluded = getattr(Test, 'exclude_fixtures', ())
-        if not isinstance(Test, type):
-            method = getattr(Test, Test._testMethodName)
-            excluded = getattr(method, 'exclude_fixtures', excluded)
-        return [
-            f for f in fixtures if getattr(f, 'KEY', NotImplemented) not in excluded
-        ]
 
     def _make_suite(self, names, klass, fixtures):
         dic = {
@@ -178,8 +170,7 @@ class TestLoader(_TestLoader):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = self._handle_excluded(test_scoped, test)
-                for F in self._sorted(fixtures):
+                for F in self._sorted(test_scoped):
                     transform = F(test)
                     _test_func = transform(_test_func)
                 _test_func(test, )
@@ -193,8 +184,7 @@ class TestLoader(_TestLoader):
                     [cls(name) for name in names]
                 )
                 s(result)
-            fixtures = self._handle_excluded(class_scoped, cls)
-            for F in self._sorted(fixtures):
+            for F in self._sorted(class_scoped):
                 wrapper = F(cls)
                 func = wrapper(func)
             Case = type(cls.__name__, (unittest.TestCase,), {
@@ -202,7 +192,7 @@ class TestLoader(_TestLoader):
             })
             Case.__module__ = cls.__module__
             case = Case('case')
-            case(result)
+            case()
 
         dic['case'] = classmethod(case)
 
@@ -255,6 +245,10 @@ class TestLoader(_TestLoader):
     def iter_provider_sets(self, klass):
         pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
         pony_fixtures = OrderedDict(pony_fixtures)
+        if hasattr(klass, 'exclude_fixtures'):
+            pony_fixtures.update(
+                dict.fromkeys(klass.exclude_fixtures, ())
+            )
         for key, providers in pony_fixtures.items():
             if callable(providers):
                 providers = providers()

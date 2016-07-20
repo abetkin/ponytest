@@ -102,7 +102,16 @@ class TestCliPos(TestCliNeg):
         self.assertTrue(self.output)
 
 
-class RegularTest(unittest.TestCase):
+class TestExcludeFixtures(unittest.TestCase):
+
+    def raises_exc(test):
+        raise Exception
+
+    # exclude_fixtures = ['F']
+    pony_fixtures = {
+        'F': [raises_exc]
+    }
+    del raises_exc
 
     def test(self):
         self.assertTrue(1)
