@@ -236,7 +236,8 @@ class TestLoader(_TestLoader):
             try:
                 fixture_chain = [
                     f for f in fixture_chain if f is not None
-                    if not hasattr(f, 'validate') or f.validate(fixture_chain, klass)
+                    if not hasattr(f, 'validate_chain')
+                    or f.validate_chain(fixture_chain, klass)
                 ]
             except ValidationError:
                 continue

@@ -107,7 +107,7 @@ class TestExcludeFixtures(unittest.TestCase):
     def raises_exc(test):
         raise Exception
 
-    # exclude_fixtures = ['F']
+    exclude_fixtures = ['F']
     pony_fixtures = {
         'F': [raises_exc]
     }
