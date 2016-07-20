@@ -89,7 +89,7 @@ class TestLoader(_TestLoader):
               issubclass(parent, unittest.TestCase)):
             name = parts[-1]
 
-            fixture_chains = self.get_fixture_chains(parent)
+            fixture_chains = list(self.iter_fixture_chains(parent))
             if not fixture_chains:
                 return self.suiteClass([])
 

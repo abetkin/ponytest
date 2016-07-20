@@ -41,7 +41,7 @@ def enable_ipdb(debug):
 
 
 @with_cli_args
-@click.option('--ipdb-all', 'debug', is_flag=True)
+@click.option('--ipdb', 'debug', is_flag=True)
 def enable_ipdb_all(debug):
     if debug:
         yield ipdb_class_scope
