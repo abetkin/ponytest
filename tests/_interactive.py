@@ -13,7 +13,6 @@ else:
 from ponytest import pony_fixtures, provider
 
 from collections import OrderedDict
-from copy import copy
 
 @provider('log', class_scoped = True)
 @contextmanager
@@ -29,8 +28,7 @@ import unittest
 
 class TestDebug(unittest.TestCase):
 
-    pony_fixtures = copy(pony_fixtures)
-    pony_fixtures['log'] = [use_log]
+    update_fixtures = {'log': [use_log]}
 
 
     @classmethod
@@ -46,6 +44,6 @@ class TestDebug(unittest.TestCase):
 
 class NoIpdb(TestDebug):
 
-    pony_fixtures = OrderedDict(pony_fixtures,
+    update_fixtures = dict(
         ipdb_all = (), ipdb = (), log = True,
     )

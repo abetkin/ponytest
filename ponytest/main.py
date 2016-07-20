@@ -18,7 +18,6 @@ import unittest
 
 
 from collections import OrderedDict
-from copy import copy
 
 
 def provider(key=None, provider=None, **kwargs):
@@ -244,6 +243,8 @@ class TestLoader(_TestLoader):
     def iter_provider_sets(self, klass):
         pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
         pony_fixtures = OrderedDict(pony_fixtures)
+        if hasattr(klass, 'update_fixtures'):
+            pony_fixtures.update(klass.update_fixtures)
         if hasattr(klass, 'exclude_fixtures'):
             pony_fixtures.update(
                 dict.fromkeys(klass.exclude_fixtures, ())

@@ -15,8 +15,6 @@ else:
 import unittest
 import collections
 
-from copy import copy
-
 class TestCaseScoped(unittest.TestCase):
 
     @contextmanager

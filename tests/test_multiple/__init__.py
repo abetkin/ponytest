@@ -12,8 +12,6 @@ else:
 import unittest
 from functools import partial
 
-from copy import copy
-
 class Option(ContextDecorator):
     def __init__(self, test, name):
         self.name = name
