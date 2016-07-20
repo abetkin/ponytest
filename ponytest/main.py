@@ -20,6 +20,12 @@ import unittest
 from collections import OrderedDict
 
 
+# lazy_fixtures test & class attr. Usecase
+# with cls.fixtures['log']
+
+# ExitStack
+
+
 def provider(key=None, provider=None, **kwargs):
     def decorator(obj, key=key, provider=provider):
         if key is None:
@@ -110,39 +116,50 @@ class TestLoader(_TestLoader):
     def _list(fixtures):
         return reversed(sorted(fixtures, key=lambda f: getattr(f, 'weight', 0)))
 
-    def _is_test_scoped(self, fixture, klass):
-        if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(klass, 'test_scoped', ()):
-                return True
-            if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
-                    and  fixture.KEY in getattr(klass, 'class_scoped', ()):
-                return False
+    @staticmethod
+    def _is_test_scoped(fixture, klass):
+        if fixture.KEY in getattr(klass, 'test_scoped', ()):
+            return True
+        if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
+                and  fixture.KEY in getattr(klass, 'class_scoped', ()):
+            return False
         return not getattr(fixture, 'class_scoped', False)
 
-    def _is_class_scoped(self, fixture, klass):
-        if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(klass, 'class_scoped', ()):
-                return True
-            if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
-                    and  fixture.KEY in getattr(klass, 'test_scoped', ()):
-                return False
+    @staticmethod
+    def _is_class_scoped(fixture, klass):
+        if fixture.KEY in getattr(klass, 'class_scoped', ()):
+            return True
+        if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
+                and  fixture.KEY in getattr(klass, 'test_scoped', ()):
+            return False
         return getattr(fixture, 'class_scoped', False)
+
+    @staticmethod
+    def _is_lazy(fixture, klass):
+        if fixture.KEY in getattr(klass, 'lazy_fixtures', ()):
+            return True
+        return getattr(fixture, 'is_lazy', False)
 
 
     def _make_suite(self, names, klass, fixtures):
-        dic = {
-            'fixtures': fixtures,
-            'setUp': empty, 'tearDown': empty,
-            'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
-        }
         test_scoped = []
         class_scoped = []
+        lazy_fixtures = []
 
         for F in fixtures:
+            if self._is_lazy(F, klass):
+                lazy_fixtures.append(F)
+                continue
             if self._is_test_scoped(F, klass):
                 test_scoped.append(F)
             if self._is_class_scoped(F, klass):
                 class_scoped.append(F)
+
+        dic = {
+            'fixtures': lazy_fixtures,
+            'setUp': empty, 'tearDown': empty,
+            'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
+        }
 
         _setUp = klass.setUp
         if PY2:

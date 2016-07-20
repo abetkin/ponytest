@@ -113,3 +113,10 @@ class TestExcludeFixtures(unittest.TestCase):
 
     def test(self):
         self.assertTrue(1)
+
+
+class TestLazyFixture(unittest.TestCase):
+    def test(self):
+        with self.fixtures('myfixt') as val:
+            self.assertTrue(self.attr)
+            self.assertEqual(val, 1)

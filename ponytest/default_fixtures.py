@@ -1,4 +1,6 @@
 
+from collections import OrderedDict
+
 from .main import pony_fixtures, provider
 from .utils import with_cli_args, PY2
 
@@ -48,7 +50,9 @@ def enable_ipdb_all(debug):
 
 
 
-pony_fixtures.update({
-    'ipdb_all': enable_ipdb_all,
-    'ipdb': enable_ipdb,
-})
+debugger_support = OrderedDict([
+    ('ipdb_all', enable_ipdb_all),
+    ('ipdb', enable_ipdb),
+])
+
+pony_fixtures.update(debugger_support)
