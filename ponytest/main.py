@@ -61,7 +61,6 @@ def empty(test):
 
 
 class TestLoader(_TestLoader):
-    # TODO customized OrderedDict for user friendliness only
     pony_fixtures = OrderedDict()
     providers = {}
 
@@ -108,10 +107,9 @@ class TestLoader(_TestLoader):
             return suites[0]
 
 
-
-    def _sorted(self, fixtures):
-        return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0),
-                      reverse=True)
+    @staticmethod
+    def _list(fixtures):
+        return reversed(sorted(fixtures, key=lambda f: getattr(f, 'weight', 0)))
 
     def _is_test_scoped(self, fixture, klass):
         if hasattr(fixture, 'KEY'):
@@ -170,7 +168,7 @@ class TestLoader(_TestLoader):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                for F in self._sorted(test_scoped):
+                for F in self._list(test_scoped):
                     transform = F(test)
                     _test_func = transform(_test_func)
                 _test_func(test, )
@@ -184,7 +182,7 @@ class TestLoader(_TestLoader):
                     [cls(name) for name in names]
                 )
                 s(result)
-            for F in self._sorted(class_scoped):
+            for F in self._list(class_scoped):
                 wrapper = F(cls)
                 func = wrapper(func)
             Case = type(cls.__name__, (unittest.TestCase,), {
