@@ -10,10 +10,12 @@ if PY2:
 else:
     from contextlib import contextmanager
 
-from ponytest import pony_fixtures
+from ponytest import pony_fixtures, provider
 
+from collections import OrderedDict
 from copy import copy
 
+@provider('log', class_scoped = True)
 @contextmanager
 def use_log(test):
     print('start logging')
@@ -21,7 +23,6 @@ def use_log(test):
     yield
     print('end logging')
 
-use_log.class_scoped = True
 
 
 import unittest
@@ -41,3 +42,10 @@ class TestDebug(unittest.TestCase):
 
     def setUp(self):
         assert 0
+
+
+class NoIpdb(TestDebug):
+
+    pony_fixtures = OrderedDict(pony_fixtures,
+        ipdb_all = (), ipdb = (), log = True,
+    )

@@ -20,41 +20,28 @@ import unittest
 from collections import OrderedDict
 from copy import copy
 
-class FixturesRegistry(OrderedDict):
 
-    def __init__(self, *args, **kwargs):
-        self.providers = kwargs.pop('providers', {})
-        super(FixturesRegistry, self).__init__(*args, **kwargs)
+def provider(key=None, provider=None, **kwargs):
+    def decorator(obj, key=key, provider=provider):
+        if key is None:
+            key = obj.KEY
+        elif not hasattr(obj, 'KEY'):
+            obj.KEY = key
+        else:
+            assert obj.KEY == key
+        if provider is None:
+            provider = getattr(obj, 'PROVIDER', getattr(obj, '__name__', None))
 
-    def provider(self):
-        def decorator(obj):
-            fixture = obj.KEY
-            provider = getattr(obj, 'PROVIDER', None)
-            if provider is None:
-                provider = getattr(obj, '__name__', None)
-            self.providers.setdefault(fixture, {}) \
-                [provider] = obj
-            return obj
-        return decorator
-
-    def __copy__(self):
-        return self.__class__(self, providers=self.providers)
-
-    def merge(self, obj, append_left=False):
-        if isinstance(obj, dict):
-            obj = obj.items()
-        to_merge = self.__class__(providers=self.providers)
-        for item in obj:
-            if not isinstance(obj, tuple):
-                obj = (obj, {})
-            key, config = item
-            to_merge[key] = config
-        if append_left:
-            ret = copy(self)
-            ret.update(to_merge)
-            return ret
-        to_merge.update(self)
-        return to_merge
+        elif not hasattr(obj, 'PROVIDER'):
+            obj.PROVIDER = provider
+        else:
+            assert obj.PROVIDER == provider
+        TestLoader.providers.setdefault(key, {}) \
+            [provider] = obj
+        for k, v in kwargs.items():
+            setattr(obj, k, v)
+        return obj
+    return decorator
 
 
 def SetupTeardownFixture(setUpFunc, tearDownFunc):
@@ -74,7 +61,9 @@ def empty(test):
 
 
 class TestLoader(_TestLoader):
-    pony_fixtures = FixturesRegistry()
+    # TODO customized OrderedDict for user friendliness only
+    pony_fixtures = OrderedDict()
+    providers = {}
 
     def loadTestsFromName(self, name, module=None):
         parts = name.split('.')
@@ -265,16 +254,18 @@ class TestLoader(_TestLoader):
 
     def iter_provider_sets(self, klass):
         pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
+        pony_fixtures = OrderedDict(pony_fixtures)
         for key, providers in pony_fixtures.items():
             if callable(providers):
                 providers = providers()
-            if providers is not None:
+            if providers is True:
+                yield self.providers[key].values()
+            else:
                 yield [
-                    p if callable(p) else pony_fixtures.providers[key][p]
+                    p if callable(p) else self.providers[key][p]
                     for p in providers
                 ]
-                continue
-            yield pony_fixtures.providers[key].values()
+
 
 
 
@@ -289,4 +280,4 @@ class TestProgram(_TestProgram):
         super(TestProgram, self).__init__(*args, **kwargs)
 
 pony_fixtures = TestLoader.pony_fixtures
-
+providers = TestLoader.providers # rename: fixture_providers

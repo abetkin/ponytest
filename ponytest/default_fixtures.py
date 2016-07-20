@@ -1,5 +1,5 @@
 
-from .main import pony_fixtures
+from .main import pony_fixtures, provider
 from .utils import with_cli_args, PY2
 
 
@@ -11,9 +11,9 @@ if not PY2:
 else:
     from contextlib2 import contextmanager
 
-
+@provider('ipdb', weight=10)
 @contextmanager
-def ipdb_fixture(test):
+def ipdb_context(test):
     import ipdb
     raised = []
     with ipdb.launch_ipdb_on_exception():
@@ -25,30 +25,30 @@ def ipdb_fixture(test):
     if raised:
         raise raised[0]
 
+@provider('ipdb_all', class_scoped=True, weight=-10)
+@contextmanager
+def ipdb_class_scope(cls):
+    with ipdb_context(cls):
+        yield
+
 
 @with_cli_args
-@click.option('--ipdb-all', 'debug', flag_value='all')
-@click.option('--ipdb', 'debug', flag_value='tests')
-def use_ipdb(debug):
-    if debug == 'tests':
-        ipdb_fixture.weight = 10
-        yield ipdb_fixture
-    elif debug == 'all':
-        ipdb_fixture.weight = -10
-        yield ipdb_fixture
+@click.option('--ipdb', 'debug', is_flag=True)
+def enable_ipdb(debug):
+    if debug:
+        yield ipdb_context
 
-def use_ipdb_at_class_scope():
-    for mgr in use_ipdb():
-        weight = getattr(mgr, 'weight', None)
-        mgr = partial(mgr)
-        mgr.class_scoped = True
-        if weight is not None:
-            mgr.weight = weight
-        yield mgr
+
+
+@with_cli_args
+@click.option('--ipdb-all', 'debug', is_flag=True)
+def enable_ipdb_all(debug):
+    if debug:
+        yield ipdb_class_scope
 
 
 
 pony_fixtures.update({
-    'ipdb_all': use_ipdb_at_class_scope,
-    'ipdb': use_ipdb,
+    'ipdb_all': enable_ipdb_all,
+    'ipdb': enable_ipdb,
 })

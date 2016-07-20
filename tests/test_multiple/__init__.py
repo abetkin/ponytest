@@ -1,5 +1,5 @@
 import click
-from ponytest import with_cli_args, class_property, pony_fixtures
+from ponytest import with_cli_args, class_property, pony_fixtures, providers
 
 import sys
 PY2 = sys.version_info[0] == 2
@@ -35,7 +35,7 @@ def cli(options):
 
 
 
-pony_fixtures.providers['myfixture'] = {
+providers['myfixture'] = {
     '1': partial(Option, name='1'),
     '2': partial(Option, name='2'),
 }
@@ -50,9 +50,9 @@ class TestMultiple(unittest.TestCase):
         try:
             length = len(sys.argv)
             sys.argv.extend(['-o', '1', '-o', '2'])
-            return pony_fixtures.merge({
+            return {
                 'myfixture': cli()
-            })
+            }
         finally:
             sys.argv = sys.argv[:length]
 
@@ -65,9 +65,9 @@ class TestMultiple(unittest.TestCase):
 
 class Test(TestMultiple):
 
-    pony_fixtures = pony_fixtures.merge({
+    pony_fixtures = {
         'myfixture': ['2']
-    })
+    }
 
     def test(self):
         self.assertTrue(self.option_value == '2')

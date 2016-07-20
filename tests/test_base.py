@@ -27,9 +27,9 @@ class TestCaseScoped(unittest.TestCase):
 
     simplest.class_scoped = True
 
-    pony_fixtures = pony_fixtures.merge({
-        1: [simplest]
-    })
+    pony_fixtures = enumerate([
+        [simplest]
+    ])
 
     del simplest
 
@@ -46,9 +46,9 @@ class TestTestScoped(unittest.TestCase):
         test.added_attribute = 'attr'
         yield
 
-    pony_fixtures = pony_fixtures.merge({
-        1: [simplest]
-    })
+    pony_fixtures = enumerate([
+        [simplest]
+    ])
 
 
     def test(self):
@@ -79,7 +79,7 @@ class TestCliNeg(unittest.TestCase):
 
     @class_property
     def pony_fixtures(cls):
-        return pony_fixtures.merge({0: cls.cli_handle})
+        return enumerate([cls.cli_handle])
 
     def test(self):
         self.assertFalse(self.output)
