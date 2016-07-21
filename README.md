@@ -107,7 +107,8 @@ pony_fixtures = enumerate([
 ```
 
 we will have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` fixtures.
-Notice `enumerate`, that provided fixtures with integer keys, since we are not interested with them.
+
+Notice the `enumerate` function, that provided fixtures with integer keys, since we are not interested with them.
 
 Besides a list, a fixture can be specified with a callable that returns iterable
 (in case when, say, fixture set depends on the command line arguments passed):
