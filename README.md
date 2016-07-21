@@ -185,6 +185,8 @@ TODO document it
 You can find more examples in [tests](https://github.com/abetkin/ponytest/tree/master/tests)
 and [default_fixtures.py](https://github.com/abetkin/ponytest/blob/master/ponytest/default_fixtures.py) module.
 
+TODO add examples from orm-related testing
+
 ## How it works
 
 As you probably presumed, `unittest` is not designed to be extended. Ponytest therefore (almost)
