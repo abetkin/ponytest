@@ -46,6 +46,13 @@ providers['myfixture'] = dict(fixtures('12'))
 
 class TestMultiple(unittest.TestCase):
 
+    class Case(unittest.TestCase):
+        def runTest(self): pass
+
+    global asserts
+    asserts = Case()
+
+
     output = []
 
     @class_property
@@ -62,6 +69,10 @@ class TestMultiple(unittest.TestCase):
 
     def test(self):
         self.output.append(self.option_value)
+
+    @classmethod
+    def tearDownClass(cls):
+        asserts.assertSetEqual(set(cls.output), set('12'))
 
 
 
@@ -87,15 +98,3 @@ class TestLazyFixture(TestMultiple):
             self.assertEqual(value, 'value')
 
 
-
-
-from unittest.suite import TestSuite
-
-def load_tests(loader, tests, *argz):
-    class Check(unittest.TestCase):
-        def runTest(self):
-            output = TestMultiple.output
-            self.assertSetEqual(set(output), set('12'))
-
-
-    return TestSuite([tests, Check()])

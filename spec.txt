@@ -24,3 +24,6 @@ generic way to enable / disable fixtures (cli)
 
 if no wrappers, use ExitStack
 
+---
+
+lazy fixtures: make concept better

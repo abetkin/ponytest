@@ -45,7 +45,8 @@ python -m ponytest <unittest args> -- --ipdb
 
 ## Writing fixtures
 
-Test fixture can be either a context manager (with `__enter__` and `__exit__` methods doing setup and teardown)
+Test fixture can be either a context managers
+(with `__enter__` and `__exit__` methods doing setup and teardown)
 or a callable-wrapper (`new_test = fixture(test)`). Both can be either test-scoped (wrapping a single test)
 or class-scoped (wrapping a testsuite formed from a testcase class). Default is test-scoped.
 Use `fixture.class_scoped = True` to change that.
@@ -69,7 +70,7 @@ import unittest
 class MyTest(unittest.TestCase):
 
     pony_fixtures = [
-        [fixture]
+        ('myfixture', [fixture]),
     ]
 
     def test(self):
@@ -80,21 +81,33 @@ As you see, we defined our fixture with a list (`[fixture]`). That's because the
 
 ```python
 pony_fixtures = [
-    [fixture, fixture]
+    ('myfixture', [fixture, fixture])
 ]
 ```
+
+Also, you probably noticed that `pony_fixtures` is a list of tuples.
+It could be anything we can pass to `OrderedDict` constructor, even a dict
+(of course, the fixtures order is not guaranteed in that case):
+
+```python
+pony_fixtures = {'myfixture': [fixture, fixture]}
+```
+
+Also notice the `'myfixture'` key, that is not used in this simple example.
+You are required to always provide the fixture key, for consistency.
 
 Of course, in a real case one would want to specify different fixtures in that list. It will cause the test to be run
 with every combination of fixtures. For, example, for the fixture set below
 
 ```python
-pony_fixtures = [
+pony_fixtures = enumerate([
     [fixt1],
     [fixt2, fixt3],
-]
+])
 ```
 
 we will have `test` run 2 times, first with `[fixt1, fixt2]` and second with `[fixt1, fixt3]` fixtures.
+Notice `enumerate`, that provided fixtures with integer keys, since we are not interested with them.
 
 Besides a list, a fixture can be specified with a callable that returns iterable
 (in case when, say, fixture set depends on the command line arguments passed):
@@ -110,9 +123,7 @@ def use_ipdb(debug):
         yield ipdb_fixture
 
 # And later
-pony_fixtures = [
-    use_ipdb
-]
+pony_fixtures = {'ipdb': use_ipdb}
 ```
 
 Fixture can define `fixture_name` attribute. If it does, that name will make part of the test class name:
@@ -130,21 +141,43 @@ In the example above the value of `fixture_name` was set to `"myfixture"`.
 You can also register fixtures globally (like it is done with the `ipdb` fixture):
 
 ```python
-from ponytest import pony_fixtures # a deque
-pony_fixtures.append(use_ipdb)
+from ponytest import pony_fixtures # OrderedDict
+pony_fixtures.update({'ipdb': use_ipdb})
 ```
 
-Note that `use_ipdb` was appended to the right end of the deque,
+Note that the "ipdb" fixture was added to the end of the `OrderedDict`,
 so that to keep all contexts available in the debug session.
 
 Ponytest will look for declared `pony_fixtures` attribute in the test class, otherwise will use `ponytest.pony_fixtures`.
 You surely can extend the fixture set for a testcase:
 
 ```python
+from ponytest import pony_fixtures
+from copy import copy
+
 class MyTest(unittest.TestCase):
-    from ponytest import pony_fixtures
-    pony_fixtures.extend(extra_fixtures)
+    pony_fixtures = copy(pony_fixtures)
+    pony_fixtures.update(extra_fixtures)
 ```
+
+There is a shortcut for this:
+
+```python
+class MyTest(unittest.TestCase):
+    update_fixtures = extra_fixtures
+```
+
+## Registering fixture providers
+
+TODO document it
+
+## `exclude_fixtures`, `test_scoped`, `class_scoped` attributes
+
+TODO document it
+
+## Lazy fixtures
+
+TODO document it
 
 ## Examples
 
@@ -154,25 +187,16 @@ and [default_fixtures.py](https://github.com/abetkin/ponytest/blob/master/ponyte
 ## How it works
 
 As you probably presumed, `unittest` is not designed to be extended. Ponytest therefore (almost)
-doesn't mess with the testing machinery of `unittest`. It overrides single
-`loadTestsFromTestCase` method of the test loader, creating a subclass of the testcase passed,
-that wraps test methods of the parent:
+doesn't mess with the testing machinery of `unittest`. It overrides
+`loadTestsFromTestCase` method of the test loader (actually, also `loadTestsFromName` for consistency), creating a subclass of the testcase passed,
+that wraps test methods of the parent.
 
 ```python
 class PONY_MyTest(MyTest):
-
-    @classmethod
-    @wrapping_with_fixtures
-    def setUpClass(cls):
-        ...
-
-    @wrapping_with_fixtures
-    def tearDown(self):
-        ...
 
     @wrapping_with_fixtures
     def test(self):
         ...
 ```
 
-`Note:` Of course, regular test methods and the ones like `setUp` and `setUpClass` are wrapped differently.
+TODO document it better

@@ -19,9 +19,6 @@ import unittest
 
 from collections import OrderedDict
 
-# TODO ExitStack
-
-
 def provider(key=None, provider=None, **kwargs):
     def decorator(obj, key=key, provider=provider):
         if key is None:
@@ -194,10 +191,15 @@ class TestLoader(_TestLoader):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                for F in self._list(test_scoped):
-                    transform = F(test)
-                    _test_func = transform(_test_func)
-                _test_func(test, )
+                fixtures = [F(test) for F in self._list(test_scoped)]
+                if not all(isinstance(f, ContextManager) for f in fixtures):
+                    for wrapper in fixtures:
+                        _test_func = wrapper(_test_func)
+                    _test_func(test)
+                    return
+                with ExitStack() as stack:
+                    for ctx in fixtures:
+                        stack.enter_context(ctx)
 
             dic[name] = wrapper
 
@@ -208,25 +210,33 @@ class TestLoader(_TestLoader):
                     [cls(name) for name in names]
                 )
                 s(result)
-            for F in self._list(class_scoped):
-                wrapper = F(cls)
-                func = wrapper(func)
+            fixtures = [F(cls) for F in self._list(class_scoped)]
+            if not all(isinstance(f, ContextManager) for f in fixtures):
+                for wrapper in fixtures:
+                    func = wrapper(func)
+            else:
+                @wraps(func)
+                def func(cls, _func=func):
+                    with ExitStack() as stack:
+                        for ctx in fixtures:
+                            stack.enter_context(ctx)
+                        return _func(cls)
             Case = type(cls.__name__, (unittest.TestCase,), {
                 'case': lambda t: func(cls),
             })
             Case.__module__ = cls.__module__
             case = Case('case')
-            case()
+            case()  # TODO if exception, need case(result)
 
         dic['case'] = classmethod(case)
 
-        fixture_names = tuple(
+        fixture_names = [
             f.fixture_name
             for f in fixtures if getattr(f, 'fixture_name', None)
-        )
+        ]
         type_name = klass.__name__
         if fixture_names:
-           type_name  = '_'.join((type_name, 'with') + fixture_names)
+           type_name  = '_'.join([type_name, 'with'] + fixture_names)
 
         new_klass = type(type_name, (klass,), dic)
         new_klass.__module__ = klass.__module__
