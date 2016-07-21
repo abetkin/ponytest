@@ -106,8 +106,8 @@ class TestLoader(_TestLoader):
 
 
     @staticmethod
-    def _list(fixtures):
-        return reversed(sorted(fixtures, key=lambda f: getattr(f, 'weight', 0)))
+    def _sort(fixtures):
+        return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
 
     @staticmethod
     def _is_test_scoped(fixture, klass):
@@ -191,15 +191,16 @@ class TestLoader(_TestLoader):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = [F(test) for F in self._list(test_scoped)]
+                fixtures = [F(test) for F in self._sort(test_scoped)]
                 if not all(isinstance(f, ContextManager) for f in fixtures):
-                    for wrapper in fixtures:
+                    for wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
                     _test_func(test)
                     return
                 with ExitStack() as stack:
                     for ctx in fixtures:
                         stack.enter_context(ctx)
+                    _test_func(test)
 
             dic[name] = wrapper
 
@@ -210,9 +211,9 @@ class TestLoader(_TestLoader):
                     [cls(name) for name in names]
                 )
                 s(result)
-            fixtures = [F(cls) for F in self._list(class_scoped)]
+            fixtures = [F(cls) for F in self._sort(class_scoped)]
             if not all(isinstance(f, ContextManager) for f in fixtures):
-                for wrapper in fixtures:
+                for wrapper in reversed(fixtures):
                     func = wrapper(func)
             else:
                 @wraps(func)

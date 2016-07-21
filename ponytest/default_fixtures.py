@@ -1,4 +1,5 @@
 
+import sys
 from collections import OrderedDict
 
 from .main import pony_fixtures, provider
@@ -13,19 +14,20 @@ if not PY2:
 else:
     from contextlib2 import contextmanager
 
+
 @provider('ipdb', weight=10)
 @contextmanager
 def ipdb_context(test):
-    import ipdb
-    raised = []
-    with ipdb.launch_ipdb_on_exception():
-        try:
-            yield
-        except Exception as exc:
-            raised.append(exc)
-            raise
-    if raised:
-        raise raised[0]
+    from ipdb import post_mortem
+    try:
+        yield
+    except Exception as exc:
+        e, m, tb = sys.exc_info()
+        if not e.__module__.startswith('unittest'):
+            print(m.__repr__(), file=sys.stderr)
+            post_mortem(tb)
+        raise exc
+
 
 @provider('ipdb_all', class_scoped=True, weight=-10)
 @contextmanager
