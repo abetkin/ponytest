@@ -73,3 +73,15 @@ class ContextManager(with_metaclass(abc.ABCMeta)):
 
 class ValidationError(Exception):
     pass
+
+
+class BoundMethod(object):
+    '''
+    Bound method of class or object, depending on how it's called
+    '''
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        return self.func.__get__(instance or owner)
+

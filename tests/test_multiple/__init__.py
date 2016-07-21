@@ -13,12 +13,15 @@ import unittest
 from functools import partial
 
 class Option(ContextDecorator):
+    KEY = 'myfixture'
+
     def __init__(self, test, name):
         self.name = name
         self.test = test
 
     def __enter__(self):
         self.test.option_value = self.name
+        return 'value'
 
     __exit__ = lambda *args: None
 
@@ -31,12 +34,14 @@ class Option(ContextDecorator):
 def cli(options):
     return options
 
+def fixtures(names):
+    for name in names:
+        f = partial(Option, name=name)
+        f.KEY = Option.KEY
+        yield name, f
 
 
-providers['myfixture'] = {
-    '1': partial(Option, name='1'),
-    '2': partial(Option, name='2'),
-}
+providers['myfixture'] = dict(fixtures('12'))
 
 
 class TestMultiple(unittest.TestCase):
@@ -68,7 +73,18 @@ class Test(TestMultiple):
     }
 
     def test(self):
-        self.assertTrue(self.option_value == '2')
+        self.assertEqual(self.option_value, '2')
+
+
+
+
+class TestLazyFixture(TestMultiple):
+    lazy_fixtures = ['myfixture']
+
+    def test(self):
+        with self.get_fixture('myfixture') as value:
+            self.assertIn(self.option_value, '12')
+            self.assertEqual(value, 'value')
 
 
 

@@ -3,11 +3,11 @@ import sys
 from unittest import suite, TestProgram as _TestProgram, SkipTest
 from unittest.loader import TestLoader as _TestLoader
 
-from functools import wraps
+from functools import wraps, partial
 from itertools import product
 from collections import deque, Iterable
 
-from .utils import PY2, ContextManager, ValidationError
+from .utils import PY2, ContextManager, ValidationError, BoundMethod
 if not PY2:
     from contextlib import contextmanager, ExitStack, ContextDecorator
 else:
@@ -19,11 +19,7 @@ import unittest
 
 from collections import OrderedDict
 
-
-# lazy_fixtures test & class attr. Usecase
-# with cls.fixtures['log']
-
-# ExitStack
+# TODO ExitStack
 
 
 def provider(key=None, provider=None, **kwargs):
@@ -118,28 +114,30 @@ class TestLoader(_TestLoader):
 
     @staticmethod
     def _is_test_scoped(fixture, klass):
-        if fixture.KEY in getattr(klass, 'test_scoped', ()):
-            return True
-        if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
-                and  fixture.KEY in getattr(klass, 'class_scoped', ()):
-            return False
+        if hasattr(fixture, 'KEY'):
+            if fixture.KEY in getattr(klass, 'test_scoped', ()):
+                return True
+            if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
+                    and  fixture.KEY in getattr(klass, 'class_scoped', ()):
+                return False
         return not getattr(fixture, 'class_scoped', False)
 
     @staticmethod
     def _is_class_scoped(fixture, klass):
-        if fixture.KEY in getattr(klass, 'class_scoped', ()):
-            return True
-        if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
-                and  fixture.KEY in getattr(klass, 'test_scoped', ()):
-            return False
+        if hasattr(fixture, 'KEY'):
+            if fixture.KEY in getattr(klass, 'class_scoped', ()):
+                return True
+            if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
+                    and  fixture.KEY in getattr(klass, 'test_scoped', ()):
+                return False
         return getattr(fixture, 'class_scoped', False)
 
     @staticmethod
     def _is_lazy(fixture, klass):
-        if fixture.KEY in getattr(klass, 'lazy_fixtures', ()):
-            return True
+        if hasattr(fixture, 'KEY'):
+            if fixture.KEY in getattr(klass, 'lazy_fixtures', ()):
+                return True
         return getattr(fixture, 'is_lazy', False)
-
 
     def _make_suite(self, names, klass, fixtures):
         test_scoped = []
@@ -155,8 +153,20 @@ class TestLoader(_TestLoader):
             if self._is_class_scoped(F, klass):
                 class_scoped.append(F)
 
+        class LazyFixture(object):
+            def __get__(self, Test, test):
+                Test = Test or test
+
+                def get_fixture(name):
+                    F = next(f for f in lazy_fixtures if f.KEY == name)
+                    fixture = F(Test)
+                    assert isinstance(fixture, ContextManager)
+                    return fixture
+
+                return get_fixture
+
         dic = {
-            'fixtures': lazy_fixtures,
+            'get_fixture': LazyFixture(),
             'setUp': empty, 'tearDown': empty,
             'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
         }
