@@ -227,7 +227,7 @@ class TestLoader(_TestLoader):
             })
             Case.__module__ = cls.__module__
             case = Case('case')
-            case()  # TODO if exception, need case(result)
+            case(result)  # TODO if exception, need case(result)
 
         dic['case'] = classmethod(case)
 
@@ -286,6 +286,10 @@ class TestLoader(_TestLoader):
         if hasattr(klass, 'exclude_fixtures'):
             pony_fixtures.update(
                 dict.fromkeys(klass.exclude_fixtures, ())
+            )
+        if hasattr(klass, 'include_fixtures'):
+            pony_fixtures.update(
+                dict.fromkeys(klass.include_fixtures, True)
             )
         for key, providers in pony_fixtures.items():
             if callable(providers):

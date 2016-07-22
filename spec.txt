@@ -3,13 +3,6 @@ TODO: Do not generate TestCase dynamically, use
 class TestCase(unittest.TestCase):
     ...
 
-
----
-
-def test(self):
-    with self.get_fixture('NAME') as res:
-        1
-
 ----
 
 1. class_scoped -> default_scopes = ['class']
@@ -20,10 +13,10 @@ generic way to enable / disable fixtures (cli)
 
 --db sqlite,postgres --ipdb --log
 
-----
-
-if no wrappers, use ExitStack
-
----
+------
 
 lazy fixtures: make concept better
+
+-------
+
+add test-level attrs, not only class-level
