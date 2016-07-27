@@ -16,8 +16,6 @@ else:
 import types
 import unittest
 
-from copy import deepcopy, copy
-
 from collections import OrderedDict
 
 def provider(key=None, provider=None, **kwargs):
@@ -141,6 +139,8 @@ class TestLoader(_TestLoader):
         test_scoped = []
         class_scoped = []
         lazy_fixtures = []
+
+        # FIXME
 
         for F in fixtures:
             if self._is_lazy(F, klass):
@@ -306,7 +306,11 @@ class TestLoader(_TestLoader):
             )
         if hasattr(klass, 'include_fixtures'):
             pony_fixtures.update(
-                dict.fromkeys(klass.include_fixtures, True) # all
+                dict.fromkeys(klass.include_fixtures, True)
+            )
+        if hasattr(klass, 'lazy_fixtures'):
+            pony_fixtures.update(
+                dict.fromkeys(klass.lazy_fixtures, True)
             )
         for key, providers in pony_fixtures.items():
             if callable(providers):

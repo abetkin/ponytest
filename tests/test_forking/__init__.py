@@ -70,31 +70,12 @@ class TestMultiple(unittest.TestCase):
     def test(self):
         self.output.append(self.option_value)
 
-    @classmethod
-    def tearDownClass(cls):
-        asserts.assertSetEqual(set(cls.output), set('12'))
 
+def load_tests(loader, tests, *argz):
+    class Check(unittest.TestCase):
+        def runTest(self):
+            output = TestMultiple.output
+            self.assertSetEqual(set(output), set('12'))
 
-
-
-class Test(TestMultiple):
-
-    pony_fixtures = {
-        'myfixture': ['2']
-    }
-
-    def test(self):
-        self.assertEqual(self.option_value, '2')
-
-
-
-
-class TestLazyFixture(TestMultiple):
-    lazy_fixtures = ['myfixture']
-
-    def test(self):
-        with self.get_fixture('myfixture') as value:
-            self.assertIn(self.option_value, '12')
-            self.assertEqual(value, 'value')
-
-
+    from unittest import TestSuite
+    return TestSuite([tests, Check()])

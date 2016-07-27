@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 import sys
 from collections import OrderedDict
 
@@ -6,13 +7,13 @@ from .main import pony_fixtures, provider
 from .utils import with_cli_args, PY2
 
 
-from functools import partial
 import click
 
 if not PY2:
     from contextlib import contextmanager
 else:
     from contextlib2 import contextmanager
+
 
 
 @provider('ipdb', weight=10)
