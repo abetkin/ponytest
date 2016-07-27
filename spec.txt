@@ -28,3 +28,5 @@ ponytest.TestCase
 default fixture set (sqlite for db fixture)
 
 ------
+
+ipdb: wtf with the console output ?

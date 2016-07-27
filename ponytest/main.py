@@ -18,6 +18,14 @@ import unittest
 
 from collections import OrderedDict
 
+_is_standalone = True
+
+def is_standalone_use(value=NotImplemented):
+    if value is not NotImplemented:
+        global _is_standalone
+        _is_standalone = value
+    return _is_standalone
+
 def provider(key=None, provider=None, **kwargs):
     def decorator(obj, key=key, provider=provider):
         if key is None:
@@ -57,6 +65,22 @@ def empty(test):
     pass
 
 
+class LazyFixture(object):
+    def __init__(self, lazy_fixtures):
+        self.fixtures = lazy_fixtures
+
+    def __get__(self, Test, test):
+        Test = Test or test
+
+        def get_fixture(name):
+            F = next(f for f in self.fixtures if f.KEY == name)
+            fixture = F(Test)
+            assert isinstance(fixture, ContextManager)
+            return fixture
+
+        return get_fixture
+
+
 class TestLoader(_TestLoader):
     pony_fixtures = OrderedDict()
     providers = {}
@@ -87,13 +111,15 @@ class TestLoader(_TestLoader):
               issubclass(parent, unittest.TestCase)):
             name = parts[-1]
 
-            fixture_chains = list(self.iter_fixture_chains(parent))
+            fixture_mgr = FixtureManager(parent)
+
+            fixture_chains = list(fixture_mgr.iter_fixture_chains())
             if not fixture_chains:
                 return self.suiteClass([])
 
             suites = []
             for chain in fixture_chains:
-                s = self._make_suite([name], parent, chain)
+                s = fixture_mgr.make_suite(chain, [name])
                 suites.append(s)
             if not suites:
                 return super(TestLoader, self).loadTestsFromName(
@@ -102,6 +128,34 @@ class TestLoader(_TestLoader):
             if len(suites) > 1:
                 return self.suiteClass(suites)
             return suites[0]
+
+    def loadTestsFromTestCase(self, testCaseClass):
+        assert not issubclass(testCaseClass, suite.TestSuite)
+        testCaseNames = self.getTestCaseNames(testCaseClass)
+        if not testCaseNames and hasattr(testCaseClass, 'runTest'):
+            testCaseNames = ['runTest']
+        fixture_mgr = FixtureManager(testCaseClass)
+        fixture_chains = list(fixture_mgr.iter_fixture_chains())
+        if not fixture_chains:
+            return self.suiteClass([])
+
+        suites = []
+        for chain in fixture_chains:
+            s = fixture_mgr.make_suite(chain, testCaseNames)
+            suites.append(s)
+        if not suites:
+            return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
+        if len(suites) > 1:
+            ret = self.suiteClass(suites)
+        else:
+            ret = suites[0]
+        return ret
+
+
+class FixtureManager(object):
+
+    def __init__(self, testCaseClass):
+        self.klass = testCaseClass
 
 
     @staticmethod
@@ -135,12 +189,11 @@ class TestLoader(_TestLoader):
                 return True
         return getattr(fixture, 'is_lazy', False)
 
-    def _make_suite(self, names, klass, fixtures):
+    def _group_by_scope(self, fixtures):
+        klass = self.klass
         test_scoped = []
         class_scoped = []
         lazy_fixtures = []
-
-        # FIXME
 
         for F in fixtures:
             if self._is_lazy(F, klass):
@@ -150,24 +203,6 @@ class TestLoader(_TestLoader):
                 test_scoped.append(F)
             if self._is_class_scoped(F, klass):
                 class_scoped.append(F)
-
-        class LazyFixture(object):
-            def __get__(self, Test, test):
-                Test = Test or test
-
-                def get_fixture(name):
-                    F = next(f for f in lazy_fixtures if f.KEY == name)
-                    fixture = F(Test)
-                    assert isinstance(fixture, ContextManager)
-                    return fixture
-
-                return get_fixture
-
-        dic = {
-            'get_fixture': LazyFixture(),
-            'setUp': empty, 'tearDown': empty,
-            'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
-        }
 
         _setUp = klass.setUp
         if PY2:
@@ -186,13 +221,28 @@ class TestLoader(_TestLoader):
             SetupTeardownFixture(_setUpClass, _tearDownClass)
         )
 
+        return {
+            'test': self._sort(test_scoped),
+            'class': self._sort(class_scoped),
+            'lazy': self._sort(lazy_fixtures),
+        }
+
+    def make_suite(self, fixtures, names):
+        klass = self.klass
+        scopes = self._group_by_scope(fixtures)
+        dic = {
+            'get_fixture': LazyFixture(scopes['lazy']),
+            'setUp': empty, 'tearDown': empty,
+            'setUpClass': classmethod(empty), 'tearDownClass': classmethod(empty),
+        }
+
         for name in names:
             func = getattr(klass, name)
             if PY2:
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = [F(test) for F in self._sort(test_scoped)]
+                fixtures = [F(test) for F in scopes['test']]
                 if not all(isinstance(f, ContextManager) for f in fixtures):
                     for wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
@@ -208,12 +258,12 @@ class TestLoader(_TestLoader):
         def case(cls, result):
             cls._result = result
             def func(cls):
-                s = self.suiteClass(
+                s = unittest.TestSuite(
                     [cls(name) for name in names]
                 )
                 s(result)
 
-            fixtures = [F(cls) for F in self._sort(class_scoped)]
+            fixtures = [F(cls) for F in scopes['class']]
             if not all(isinstance(f, ContextManager) for f in fixtures):
                 for wrapper in reversed(fixtures):
                     func = wrapper(func)
@@ -227,7 +277,9 @@ class TestLoader(_TestLoader):
 
             class Case(unittest.TestCase):
                 def run(self, _result=None):
-                    _result = unittest.TestCase.run(self, _result)
+                    if _result is None:
+                        _result = self.defaultTestResult()
+                    unittest.TestCase.run(self, _result)
                     if not _result.wasSuccessful():
                         result.failures += _result.failures
                         result.errors += _result.errors
@@ -245,58 +297,94 @@ class TestLoader(_TestLoader):
             case = Case('runCase')
             case()
 
-
         dic['case'] = classmethod(case)
-
-        fixture_names = [
-            f.fixture_name
-            for f in fixtures if getattr(f, 'fixture_name', None)
-        ]
-        type_name = klass.__name__
-        if fixture_names:
-           type_name  = '_'.join([type_name, 'with'] + fixture_names)
-
-        new_klass = type(type_name, (klass,), dic)
+        dic['with_fixtures'] = self.get_names(fixtures)
+        new_klass = type(klass.__name__, (klass,), dic)
         new_klass.__module__ = klass.__module__
+        return unittest.TestSuite([new_klass.case])
 
-        return self.suiteClass([new_klass.case])
 
-    def loadTestsFromTestCase(self, testCaseClass):
-        assert not issubclass(testCaseClass, suite.TestSuite)
-        testCaseNames = self.getTestCaseNames(testCaseClass)
-        if not testCaseNames and hasattr(testCaseClass, 'runTest'):
-            testCaseNames = ['runTest']
-        fixture_chains = list(self.iter_fixture_chains(testCaseClass))
-        if not fixture_chains:
-            return self.suiteClass([])
+    def prepare_standalone_case(self, fixtures, names):
+        '''
+        '''
+        scopes = self._group_by_scope(fixtures)
+        dic = {}
 
-        suites = []
-        for chain in fixture_chains:
-            s = self._make_suite(testCaseNames, testCaseClass, chain)
-            suites.append(s)
-        if not suites:
-            return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
-        if len(suites) > 1:
-            ret = self.suiteClass(suites)
-        else:
-            ret = suites[0]
-        return ret
+        stacks = {name: ExitStack() for name in names}
 
-    def iter_fixture_chains(self, klass):
-        provider_sets = [l for l in self.iter_provider_sets(klass) if l]
+        def setUp(test):
+            stack = stacks[test._testMethodName]
+            with stack:
+                for Ctx in scopes['test']:
+                    ctx = Ctx(test)
+                    stack.enter_context(ctx)
+                stacks[test._testMethodName] = stack.pop_all()
+        dic['setUp'] = setUp
+
+        def tearDown(test):
+            stack = stacks[test._testMethodName]
+            with stack:
+                pass
+        dic['tearDown'] = tearDown
+
+        for name in names:
+            func = getattr(self.klass, name)
+            if PY2:
+                func = func.__func__
+            @wraps(func)
+            def wrapper(test, *arg, **kw):
+                stack = stacks[test._testMethodName]
+                with stack:
+                    func(test, *arg, **kw)
+                    stacks[test._testMethodName] = stack.pop_all()
+            dic[name] = wrapper
+
+        stack_holder = [ExitStack()]
+
+        def setUpClass(cls, *arg, **kw):
+            stack = stack_holder[0]
+            with stack:
+                for Ctx in scopes['class']:
+                    ctx = Ctx(cls)
+                    stack.enter_context(ctx)
+                stack_holder[0] = stack.pop_all()
+        dic['setUpClass'] = classmethod(setUpClass)
+
+        def tearDownClass(cls, *arg, **kw):
+            stack = stack_holder[0]
+            with stack:
+                pass
+        dic['tearDownClass'] = classmethod(tearDownClass)
+        dic.update({
+            'with_fixtures': self.get_names(fixtures),
+            'get_fixture': LazyFixture(scopes['lazy'])
+        })
+        return dic
+
+
+    def get_names(self, fixtures):
+        return [
+            f.fixture_name
+            for f in self._sort(fixtures)
+            if getattr(f, 'fixture_name', None)
+        ]
+
+    def iter_fixture_chains(self):
+        provider_sets = [l for l in self.iter_provider_sets() if l]
         for fixture_chain in product(*provider_sets):
             try:
                 fixture_chain = [
                     f for f in fixture_chain if f is not None
                     if not hasattr(f, 'validate_chain')
-                    or f.validate_chain(fixture_chain, klass)
+                    or f.validate_chain(fixture_chain, self.klass)
                 ]
             except ValidationError:
                 continue
             yield fixture_chain
 
-    def iter_provider_sets(self, klass):
-        pony_fixtures = getattr(klass, 'pony_fixtures', self.pony_fixtures)
+    def iter_provider_sets(self):
+        klass = self.klass
+        pony_fixtures = getattr(klass, 'pony_fixtures', TestLoader.pony_fixtures)
         pony_fixtures = OrderedDict(pony_fixtures)
         if hasattr(klass, 'update_fixtures'):
             pony_fixtures.update(klass.update_fixtures)
@@ -316,10 +404,10 @@ class TestLoader(_TestLoader):
             if callable(providers):
                 providers = providers()
             if providers is True:
-                yield self.providers[key].values()
+                yield TestLoader.providers[key].values()
             else:
                 yield [
-                    p if callable(p) else self.providers[key][p]
+                    p if callable(p) else TestLoader.providers[key][p]
                     for p in providers
                 ]
 
