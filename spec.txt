@@ -20,3 +20,11 @@ lazy fixtures: make concept better
 -------
 
 add test-level attrs, not only class-level
+
+-------
+
+ponytest.TestCase
+
+default fixture set (sqlite for db fixture)
+
+------

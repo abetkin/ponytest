@@ -47,3 +47,21 @@ class NoIpdb(TestDebug):
     update_fixtures = dict(
         ipdb_all = (), ipdb = (), log = True,
     )
+
+
+class TestTestRunCount(unittest.TestCase):
+
+    def test(self):
+        self.assertTrue(1)
+
+    def setUp(self):
+        self.assertTrue(0)
+
+    def test_failing(self):
+        self.assertTrue(0)
+
+
+    # @classmethod
+    # def setUpClass(cls):
+    #     assert 0
+

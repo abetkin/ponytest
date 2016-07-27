@@ -16,6 +16,7 @@ else:
 import types
 import unittest
 
+from copy import deepcopy, copy
 
 from collections import OrderedDict
 
@@ -211,6 +212,7 @@ class TestLoader(_TestLoader):
                     [cls(name) for name in names]
                 )
                 s(result)
+
             fixtures = [F(cls) for F in self._sort(class_scoped)]
             if not all(isinstance(f, ContextManager) for f in fixtures):
                 for wrapper in reversed(fixtures):
@@ -222,12 +224,27 @@ class TestLoader(_TestLoader):
                         for ctx in fixtures:
                             stack.enter_context(ctx)
                         return _func(cls)
-            Case = type(cls.__name__, (unittest.TestCase,), {
-                'case': lambda t: func(cls),
-            })
+
+            class Case(unittest.TestCase):
+                def run(self, _result=None):
+                    _result = unittest.TestCase.run(self, _result)
+                    if not _result.wasSuccessful():
+                        result.failures += _result.failures
+                        result.errors += _result.errors
+                        result.skipped += _result.skipped
+                        result.expectedFailures += _result.expectedFailures
+                        result.unexpectedSuccesses += _result.unexpectedSuccesses
+                        result.testsRun += _result.testsRun
+                        # result.shouldStop = _result.shouldStop
+
+                def runCase(self):
+                    func(cls)
+
+            Case = type(cls.__name__, (Case,), {})
             Case.__module__ = cls.__module__
-            case = Case('case')
-            case(result)  # TODO if exception, need case(result)
+            case = Case('runCase')
+            case()
+
 
         dic['case'] = classmethod(case)
 
@@ -289,7 +306,7 @@ class TestLoader(_TestLoader):
             )
         if hasattr(klass, 'include_fixtures'):
             pony_fixtures.update(
-                dict.fromkeys(klass.include_fixtures, True)
+                dict.fromkeys(klass.include_fixtures, True) # all
             )
         for key, providers in pony_fixtures.items():
             if callable(providers):
@@ -301,8 +318,6 @@ class TestLoader(_TestLoader):
                     p if callable(p) else self.providers[key][p]
                     for p in providers
                 ]
-
-
 
 
 class TestProgram(_TestProgram):
