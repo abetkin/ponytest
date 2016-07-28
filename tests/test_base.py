@@ -1,7 +1,7 @@
 
 from functools import wraps
 import click
-from ponytest import with_cli_args, class_property, pony_fixtures
+from ponytest import with_cli_args, class_property, pony_fixtures, TestCase
 
 import sys
 PY2 = sys.version_info[0] == 2
@@ -15,7 +15,7 @@ else:
 import unittest
 import collections
 
-class TestCaseScoped(unittest.TestCase):
+class TestCaseScoped(TestCase):
 
     @contextmanager
     def simplest(cls):
@@ -36,7 +36,7 @@ class TestCaseScoped(unittest.TestCase):
         self.assertNotIn('added_attribute', self.__dict__)
 
 
-class TestTestScoped(unittest.TestCase):
+class TestTestScoped(TestCase):
 
     @contextmanager
     def simplest(test):
@@ -53,7 +53,7 @@ class TestTestScoped(unittest.TestCase):
         self.assertIn('added_attribute', self.__dict__)
 
 
-class TestCliNeg(unittest.TestCase):
+class TestCliNeg(TestCase):
 
     output = ()
 
@@ -91,7 +91,7 @@ class TestCliPos(TestCliNeg):
         def handle():
             try:
                 sys.argv.append('--on')
-                return super(TestCliPos, cls).cli_handle()
+                return TestCliNeg.cli_handle()
             finally:
                 sys.argv.remove('--on')
         return handle
@@ -100,7 +100,7 @@ class TestCliPos(TestCliNeg):
         self.assertTrue(self.output)
 
 
-class TestExcludeFixtures(unittest.TestCase):
+class TestExcludeFixtures(TestCase):
 
     def raises_exc(test):
         raise Exception

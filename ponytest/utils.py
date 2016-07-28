@@ -41,18 +41,24 @@ class class_property(object):
     def __get__(self, obj, cls):
         return self.func(cls)
 
+def add_metaclass(metaclass):
+    """Class decorator for creating a class with a metaclass."""
+    def wrapper(cls):
+        orig_vars = cls.__dict__.copy()
+        slots = orig_vars.get('__slots__')
+        if slots is not None:
+            if isinstance(slots, str):
+                slots = [slots]
+            for slots_var in slots:
+                orig_vars.pop(slots_var)
+        orig_vars.pop('__dict__', None)
+        orig_vars.pop('__weakref__', None)
+        return metaclass(cls.__name__, cls.__bases__, orig_vars)
+    return wrapper
 
-def with_metaclass(meta, *bases):
-    base_marker = [object]
-    class __metaclass__(meta):
-        def __new__(cls, name, this_bases, d):
-            if this_bases is base_marker:
-                return type.__new__(cls, name, tuple(this_bases), d)
-            return meta(name, bases, d)
-    return __metaclass__('<dummy_class>', base_marker, {})
 
-
-class ContextManager(with_metaclass(abc.ABCMeta)):
+@add_metaclass(abc.ABCMeta)
+class ContextManager(object):
     # Taken from Python 3.6 (contextlib).
 
     def __enter__(self):
@@ -84,3 +90,5 @@ class BoundMethod(object):
     def __get__(self, instance, owner):
         return self.func.__get__(instance or owner)
 
+def no_op(*args):
+    pass

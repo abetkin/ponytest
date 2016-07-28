@@ -10,7 +10,7 @@ if PY2:
 else:
     from contextlib import contextmanager
 
-from ponytest import pony_fixtures, provider
+from ponytest import pony_fixtures, provider, TestCase
 
 from collections import OrderedDict
 
@@ -49,7 +49,7 @@ class NoIpdb(TestDebug):
     )
 
 
-class TestTestRunCount(unittest.TestCase):
+class TestTestRunCount(TestCase):
 
     def test(self):
         self.assertTrue(1)
@@ -61,7 +61,7 @@ class TestTestRunCount(unittest.TestCase):
         self.assertTrue(0)
 
 
-    # @classmethod
-    # def setUpClass(cls):
-    #     assert 0
+    @classmethod
+    def setUpClass(cls):
+        assert 0
 
