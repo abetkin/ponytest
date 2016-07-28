@@ -38,7 +38,7 @@ class TestLoader(_TestLoader):
               issubclass(parent, unittest.TestCase)):
             name = parts[-1]
 
-            fixture_mgr = FixtureManager(parent)
+            fixture_mgr = FixtureManager(parent, [name])
 
             fixture_chains = list(fixture_mgr.iter_fixture_chains())
             if not fixture_chains:
@@ -62,8 +62,12 @@ class TestLoader(_TestLoader):
         testCaseNames = self.getTestCaseNames(testCaseClass)
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
-        fixture_mgr = FixtureManager(testCaseClass)
-        fixture_chains = list(fixture_mgr.iter_fixture_chains())
+        fixture_mgr = FixtureManager(testCaseClass, testCaseNames)
+        for names, fixtures in fixture_mgr.iterate():
+            'TODO'
+
+
+
         if not fixture_chains:
             return self.suiteClass([])
 

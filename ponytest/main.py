@@ -85,12 +85,13 @@ class Meta(type):
             return klass
         if not is_standalone_use():
             return klass
-        mgr = FixtureManager(klass)
+        names = unittest.loader.TestLoader().getTestCaseNames(klass)
+        mgr = FixtureManager(klass, names)
         fixture_chains = list(mgr.iter_fixture_chains())
         if not fixture_chains:
             return klass
         fixtures = fixture_chains[0]
-        names = unittest.loader.TestLoader().getTestCaseNames(klass)
+
         builder = ClassFixturesAreContextManagers(klass, fixtures, names)
         dic = builder.prepare_case()
         namespace.update(dic)
@@ -359,10 +360,12 @@ class ClassFixturesCanBeCallables(CaseBuilder):
 
 class FixtureManager(object):
 
-    def __init__(self, testCaseClass):
-        self.klass = testCaseClass
+    def __init__(self, testcase_cls, test_names):
+        self.klass = testcase_cls
+        self.names = test_names
 
     def iter_fixture_chains(self):
+        # wider: config
         provider_sets = [l for l in self.iter_provider_sets() if l]
         for fixture_chain in product(*provider_sets):
             try:
@@ -403,3 +406,20 @@ class FixtureManager(object):
                     p if callable(p) else fixture_providers[key][p]
                     for p in providers
                 ]
+
+    def iter_test_names(self):
+        non_special = []
+        for name in testCaseNames:
+            func = getattr(klass, name)
+            if any(hasattr(func, attr) for attr in (
+                'test_scoped', 'class_scoped', 'update_fixtures', 'include_fixtures', 'exclude_fixtures',
+            )):
+                yield [name], klass
+                continue
+            non_special.append(name)
+        yield non_special, klass
+
+
+    def iterate(self):
+        yield fixtures, names
+        # TODO
