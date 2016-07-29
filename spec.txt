@@ -1,9 +1,3 @@
-TODO: Do not generate TestCase dynamically, use
-
-class TestCase(unittest.TestCase):
-    ...
-
-----
 
 1. class_scoped -> default_scopes = ['class']
 
@@ -17,16 +11,6 @@ generic way to enable / disable fixtures (cli)
 
 lazy fixtures: make concept better
 
--------
-
-add test-level attrs, not only class-level
-
--------
-
-ponytest.TestCase
-
-default fixture set (sqlite for db fixture)
-
-------
+---------
 
 ipdb: wtf with the console output ?
