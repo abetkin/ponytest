@@ -12,14 +12,14 @@ def simplest(cls):
 simplest.scope = 'class'
 simplest.fixture_name = 'SI'
 
+from ponytest.is_standalone import is_standalone_use
+if is_standalone_use():
 
+    class Test1(TestCase):
 
-class Test1(TestCase):
+        pony_fixtures = enumerate([
+            [simplest]
+        ])
 
-    pony_fixtures = enumerate([
-        [simplest]
-    ])
-
-    def test(self):
-        print(self.added_attribute)
-        assert 0
+        def test(self):
+            self.assertTrue(self.added_attribute)

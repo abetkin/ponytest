@@ -377,7 +377,6 @@ class FixtureManager(object):
                 yield names, fixtures, config
 
     def iter_provider_sets(self, config, pony_fixtures=pony_fixtures):
-        klass = self.klass
         pony_fixtures = getattr(config, 'pony_fixtures', pony_fixtures)
         pony_fixtures = OrderedDict(pony_fixtures)
         if hasattr(config, 'update_fixtures'):
@@ -410,8 +409,7 @@ class FixtureManager(object):
     #     True => read from console
 
     def iter_test_configs(self):
-        # yield names, config_obj
-        #
+        'yield names, config_obj'
         klass = self.klass
         if not self.test_level_config:
             yield self.names, klass
