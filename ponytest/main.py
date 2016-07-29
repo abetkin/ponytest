@@ -3,7 +3,8 @@ from functools import wraps, partial
 from itertools import product
 from collections import deque, Iterable
 
-from .utils import PY2, ContextManager, ValidationError, add_metaclass, no_op
+from .utils import PY2, ContextManager, ValidationError, add_metaclass, no_op, \
+        merge_attrs
 if not PY2:
     from contextlib import contextmanager, ExitStack, ContextDecorator
 else:
@@ -364,37 +365,37 @@ class FixtureManager(object):
         self.klass = testcase_cls
         self.names = test_names
 
-    def iter_fixture_chains(self):
-        # wider: config
-        provider_sets = [l for l in self.iter_provider_sets() if l]
-        for fixture_chain in product(*provider_sets):
-            try:
-                fixture_chain = [
-                    f for f in fixture_chain if f is not None
-                    if not hasattr(f, 'validate_chain')
-                    or f.validate_chain(fixture_chain, self.klass)
-                ]
-            except ValidationError:
-                continue
-            yield fixture_chain
+    def __iter__(self):
+        for names, config in self.iter_test_configs():
+            provider_sets = [l for l in self.iter_provider_sets(config) if l]
+            for fixtures in product(*provider_sets):
+                try:
+                    fixtures = [
+                        f for f in fixtures if f is not None
+                        if not hasattr(f, 'validate_chain')
+                        or f.validate_chain(fixtures, self.klass)
+                    ]
+                except ValidationError:
+                    continue
+                yield names, fixtures
 
-    def iter_provider_sets(self, pony_fixtures=pony_fixtures):
+    def iter_provider_sets(self, config, pony_fixtures=pony_fixtures):
         klass = self.klass
-        pony_fixtures = getattr(klass, 'pony_fixtures', pony_fixtures)
+        pony_fixtures = getattr(config, 'pony_fixtures', pony_fixtures)
         pony_fixtures = OrderedDict(pony_fixtures)
-        if hasattr(klass, 'update_fixtures'):
-            pony_fixtures.update(klass.update_fixtures)
-        if hasattr(klass, 'exclude_fixtures'):
+        if hasattr(config, 'update_fixtures'):
+            pony_fixtures.update(config.update_fixtures)
+        if hasattr(config, 'exclude_fixtures'):
             pony_fixtures.update(
-                dict.fromkeys(klass.exclude_fixtures, ())
+                dict.fromkeys(config.exclude_fixtures, ())
             )
-        if hasattr(klass, 'include_fixtures'):
+        if hasattr(config, 'include_fixtures'):
             pony_fixtures.update(
-                dict.fromkeys(klass.include_fixtures, True)
+                dict.fromkeys(config.include_fixtures, True)
             )
-        if hasattr(klass, 'lazy_fixtures'):
+        if hasattr(config, 'lazy_fixtures'):
             pony_fixtures.update(
-                dict.fromkeys(klass.lazy_fixtures, True)
+                dict.fromkeys(config.lazy_fixtures, True)
             )
         for key, providers in pony_fixtures.items():
             if callable(providers):
@@ -407,19 +408,18 @@ class FixtureManager(object):
                     for p in providers
                 ]
 
-    def iter_test_names(self):
+    def iter_test_configs(self):
+        # yield names, config_obj
+        #
+        klass = self.klass
         non_special = []
-        for name in testCaseNames:
+        for name in self.names:
             func = getattr(klass, name)
             if any(hasattr(func, attr) for attr in (
                 'test_scoped', 'class_scoped', 'update_fixtures', 'include_fixtures', 'exclude_fixtures',
+                'pony_fixtures',
             )):
-                yield [name], klass
+                yield [name], merge_attrs(func, klass)
                 continue
             non_special.append(name)
         yield non_special, klass
-
-
-    def iterate(self):
-        yield fixtures, names
-        # TODO

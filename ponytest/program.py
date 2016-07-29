@@ -40,12 +40,13 @@ class TestLoader(_TestLoader):
 
             fixture_mgr = FixtureManager(parent, [name])
 
-            fixture_chains = list(fixture_mgr.iter_fixture_chains())
-            if not fixture_chains:
+            fixture_mgr = list(fixture_mgr)
+            if not fixture_mgr:
+                # TODO
                 return self.suiteClass([])
 
             suites = []
-            for chain in fixture_chains:
+            for chain, _ in fixture_mgr:
                 builder = CaseBuilder.factory(parent, chain, [name])
                 s = builder.make_suite()
                 suites.append(s)
@@ -63,21 +64,22 @@ class TestLoader(_TestLoader):
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
         fixture_mgr = FixtureManager(testCaseClass, testCaseNames)
-        for names, fixtures in fixture_mgr.iterate():
+        fixture_mgr = list(fixture_mgr)
+        if not fixture_mgr:
+            # TODO
+            return self.suiteClass([])
+        suites = []
+        for names, fixtures in fixture_mgr:
             'TODO'
 
 
 
-        if not fixture_chains:
-            return self.suiteClass([])
+        # if not fixture_chains:
+        #     return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
 
-        suites = []
-        for chain in fixture_chains:
-            builder = CaseBuilder.factory(testCaseClass, chain, testCaseNames)
+            builder = CaseBuilder.factory(testCaseClass, fixtures, names)
             s = builder.make_suite()
             suites.append(s)
-        if not suites:
-            return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
         if len(suites) > 1:
             ret = self.suiteClass(suites)
         else:

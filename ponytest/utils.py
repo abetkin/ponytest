@@ -80,15 +80,18 @@ class ValidationError(Exception):
     pass
 
 
-class BoundMethod(object):
-    '''
-    Bound method of class or object, depending on how it's called
-    '''
-    def __init__(self, func):
-        self.func = func
-
-    def __get__(self, instance, owner):
-        return self.func.__get__(instance or owner)
-
 def no_op(*args):
     pass
+
+
+class merge_attrs(object):
+    def __init__(self, *objects):
+        self.objects = objects
+    
+    def __getattr__(self, key):
+        for obj in self.objects:
+            try:
+                return getattr(obj, key)
+            except AttributeError:
+                pass
+        raise AttributeError

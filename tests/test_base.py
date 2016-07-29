@@ -114,3 +114,26 @@ class TestExcludeFixtures(TestCase):
     def test(self):
         self.assertTrue(1)
 
+
+class TestLevelConfig(TestCase):
+
+    @contextmanager
+    def f1(test):
+        test.attr = 1
+        yield
+    
+    @contextmanager
+    def f2(test):
+        test.attr = 2
+        yield
+
+    update_fixtures = {0: [f1]}
+
+    def test_1(self):
+        self.assertEqual(self.attr, 1)
+    
+    def test_2(self):
+        self.assertEqual(self.attr, 2)
+    test_2.update_fixtures = {0: [f2]}
+
+    del f1, f2
