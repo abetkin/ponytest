@@ -14,7 +14,7 @@ from ponytest import pony_fixtures, provider, TestCase
 
 from collections import OrderedDict
 
-@provider('log', class_scoped = True)
+@provider('log', scope='class')
 @contextmanager
 def use_log(test):
     print('start logging')

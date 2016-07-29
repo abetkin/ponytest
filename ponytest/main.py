@@ -16,13 +16,7 @@ from collections import OrderedDict
 
 from .is_standalone import is_standalone_use
 
-# class OD(OrderedDict):
 
-#     def __setitem__(self, key, value):
-#         print('__setitem__', key, value)
-#         super(OD, self).__setitem__(key, value)
-
-# pony_fixtures = OD()
 pony_fixtures = OrderedDict()
 fixture_providers = {}
 
@@ -171,7 +165,7 @@ class CaseBuilder(object):
             if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
                     and  fixture.KEY in getattr(klass, 'class_scoped', ()):
                 return False
-        return not getattr(fixture, 'class_scoped', False)
+        return getattr(fixture, 'scope', 'test') == 'test'
 
     @staticmethod
     def _is_class_scoped(fixture, klass):
@@ -181,14 +175,14 @@ class CaseBuilder(object):
             if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
                     and  fixture.KEY in getattr(klass, 'test_scoped', ()):
                 return False
-        return getattr(fixture, 'class_scoped', False)
+        return getattr(fixture, 'scope', 'test') == 'class'
 
     @staticmethod
     def _is_lazy(fixture, klass):
         if hasattr(fixture, 'KEY'):
             if fixture.KEY in getattr(klass, 'lazy_fixtures', ()):
                 return True
-        return getattr(fixture, 'is_lazy', False)
+        return getattr(fixture, 'scope', 'test') == 'lazy'
 
     @classmethod
     def _group_by_scope(cls, klass, fixtures):

@@ -9,7 +9,7 @@ def simplest(cls):
     cls.added_attribute = 'attr'
     yield
 
-simplest.class_scoped = True
+simplest.scope = 'class'
 simplest.fixture_name = 'SI'
 
 

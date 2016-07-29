@@ -30,7 +30,7 @@ def ipdb_context(test):
         raise exc
 
 
-@provider('ipdb_all', class_scoped=True, weight=-10)
+@provider('ipdb_all', scope='class', weight=-10)
 @contextmanager
 def ipdb_class_scope(cls):
     with ipdb_context(cls):

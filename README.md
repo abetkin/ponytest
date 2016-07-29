@@ -49,7 +49,7 @@ Test fixture can be either a context managers
 (with `__enter__` and `__exit__` methods doing setup and teardown)
 or a callable-wrapper (`new_test = fixture(test)`). Both can be either test-scoped (wrapping a single test)
 or class-scoped (wrapping a testsuite formed from a testcase class). Default is test-scoped.
-Use `fixture.class_scoped = True` to change that.
+Use `fixture.scope = 'class'` to change that.
 
 Let's see some examples.
 
@@ -63,7 +63,7 @@ def fixture(test):
     yield
     print('tearing down', test._testMethodName)
 
-fixture.class_scoped = False # could omit this
+fixture.scope = 'test' # could omit this
 
 import unittest
 

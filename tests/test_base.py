@@ -23,7 +23,7 @@ class TestCaseScoped(TestCase):
         cls.added_attribute = 'attr'
         yield
 
-    simplest.class_scoped = True
+    simplest.scope = 'class'
 
     pony_fixtures = enumerate([
         [simplest]
