@@ -81,13 +81,13 @@ class Meta(type):
         if not is_standalone_use():
             return klass
         names = unittest.loader.TestLoader().getTestCaseNames(klass)
-        mgr = FixtureManager(klass, names)
-        fixture_chains = list(mgr.iter_fixture_chains())
-        if not fixture_chains:
-            return klass
-        fixtures = fixture_chains[0]
+        mgr = FixtureManager(klass, names, test_level_config=False)
+        mgr = list(mgr)
+        names, fixtures, config = mgr[0]
+        # if not fixture_chains:
+        #     return klass
 
-        builder = ClassFixturesAreContextManagers(klass, fixtures, names)
+        builder = ClassFixturesAreContextManagers(klass, fixtures, names, config)
         dic = builder.prepare_case()
         namespace.update(dic)
         return super(Meta, cls).__new__(cls, name, bases, namespace)
@@ -112,25 +112,26 @@ class TestCase(unittest.TestCase):
 
 class CaseBuilder(object):
 
-    def __init__(self, testcase_cls, fixtures, names):
+    def __init__(self, testcase_cls, fixtures, names, config):
         self.klass = testcase_cls
         try:
             fixtures['class'], fixtures['test'], fixtures['lazy']
         except:
-            fixtures = self._group_by_scope(testcase_cls, fixtures)
+            fixtures = self._group_by_scope(testcase_cls, fixtures, config)
         self.fixtures = fixtures
         self.names = names
+        self.config = config
 
     @classmethod
-    def factory(cls, testcase_cls, fixtures, names):
-        scopes = cls._group_by_scope(testcase_cls, fixtures)
+    def factory(cls, testcase_cls, fixtures, names, config):
+        scopes = cls._group_by_scope(testcase_cls, fixtures, config)
         for F in scopes['class']:
             if not isinstance(F(testcase_cls), ContextManager):
                 builder = ClassFixturesCanBeCallables
                 break
         else:
             builder = ClassFixturesAreContextManagers
-        return builder(testcase_cls, scopes, names)
+        return builder(testcase_cls, scopes, names, config)
 
     def prepare_case(self):
         '''
@@ -158,45 +159,45 @@ class CaseBuilder(object):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
 
     @staticmethod
-    def _is_test_scoped(fixture, klass):
+    def _is_test_scoped(fixture, config):
         if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(klass, 'test_scoped', ()):
+            if fixture.KEY in getattr(config, 'test_scoped', ()):
                 return True
-            if fixture.KEY not in getattr(klass, 'test_scoped', ()) \
-                    and  fixture.KEY in getattr(klass, 'class_scoped', ()):
+            if fixture.KEY not in getattr(config, 'test_scoped', ()) \
+                    and  fixture.KEY in getattr(config, 'class_scoped', ()):
                 return False
         return getattr(fixture, 'scope', 'test') == 'test'
 
     @staticmethod
-    def _is_class_scoped(fixture, klass):
+    def _is_class_scoped(fixture, config):
         if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(klass, 'class_scoped', ()):
+            if fixture.KEY in getattr(config, 'class_scoped', ()):
                 return True
-            if fixture.KEY not in getattr(klass, 'class_scoped', ()) \
-                    and  fixture.KEY in getattr(klass, 'test_scoped', ()):
+            if fixture.KEY not in getattr(config, 'class_scoped', ()) \
+                    and  fixture.KEY in getattr(config, 'test_scoped', ()):
                 return False
         return getattr(fixture, 'scope', 'test') == 'class'
 
     @staticmethod
-    def _is_lazy(fixture, klass):
+    def _is_lazy(fixture, config):
         if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(klass, 'lazy_fixtures', ()):
+            if fixture.KEY in getattr(config, 'lazy_fixtures', ()):
                 return True
         return getattr(fixture, 'scope', 'test') == 'lazy'
 
     @classmethod
-    def _group_by_scope(cls, klass, fixtures):
+    def _group_by_scope(cls, klass, fixtures, config):
         test_scoped = []
         class_scoped = []
         lazy_fixtures = []
 
         for F in fixtures:
-            if cls._is_lazy(F, klass):
+            if cls._is_lazy(F, config):
                 lazy_fixtures.append(F)
                 continue
-            if cls._is_test_scoped(F, klass):
+            if cls._is_test_scoped(F, config):
                 test_scoped.append(F)
-            if cls._is_class_scoped(F, klass):
+            if cls._is_class_scoped(F, config):
                 class_scoped.append(F)
 
         _setUp = klass.setUp
@@ -216,11 +217,12 @@ class CaseBuilder(object):
             SetupTeardownFixture(_setUpClass, _tearDownClass)
         )
 
-        return {
+        ret = {
             'test': cls._sort(test_scoped),
             'class': cls._sort(class_scoped),
             'lazy': cls._sort(lazy_fixtures),
         }
+        return ret
 
 
 class ClassFixturesAreContextManagers(CaseBuilder):
@@ -355,9 +357,10 @@ class ClassFixturesCanBeCallables(CaseBuilder):
 
 class FixtureManager(object):
 
-    def __init__(self, testcase_cls, test_names):
+    def __init__(self, testcase_cls, test_names, test_level_config=True):
         self.klass = testcase_cls
         self.names = test_names
+        self.test_level_config = test_level_config
 
     def __iter__(self):
         for names, config in self.iter_test_configs():
@@ -371,7 +374,7 @@ class FixtureManager(object):
                     ]
                 except ValidationError:
                     continue
-                yield names, fixtures
+                yield names, fixtures, config
 
     def iter_provider_sets(self, config, pony_fixtures=pony_fixtures):
         klass = self.klass
@@ -402,10 +405,17 @@ class FixtureManager(object):
                     for p in providers
                 ]
 
+    # def get_providers(self, passed_value):
+    #     TODO
+    #     True => read from console
+
     def iter_test_configs(self):
         # yield names, config_obj
         #
         klass = self.klass
+        if not self.test_level_config:
+            yield self.names, klass
+            return
         non_special = []
         for name in self.names:
             func = getattr(klass, name)

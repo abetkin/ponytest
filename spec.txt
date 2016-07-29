@@ -14,3 +14,9 @@ lazy fixtures: make concept better
 ---------
 
 ipdb: wtf with the console output ?
+
+-----
+
+use value provided for a fixture: {'timeout': 10}
+
+-----

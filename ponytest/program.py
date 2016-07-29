@@ -69,7 +69,7 @@ class TestLoader(_TestLoader):
             # TODO
             return self.suiteClass([])
         suites = []
-        for names, fixtures in fixture_mgr:
+        for names, fixtures, config in fixture_mgr:
             'TODO'
 
 
@@ -77,7 +77,7 @@ class TestLoader(_TestLoader):
         # if not fixture_chains:
         #     return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
 
-            builder = CaseBuilder.factory(testCaseClass, fixtures, names)
+            builder = CaseBuilder.factory(testCaseClass, fixtures, names, config)
             s = builder.make_suite()
             suites.append(s)
         if len(suites) > 1:
