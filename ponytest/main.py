@@ -217,12 +217,11 @@ class CaseBuilder(object):
             SetupTeardownFixture(_setUpClass, _tearDownClass)
         )
 
-        ret = {
+        return {
             'test': cls._sort(test_scoped),
             'class': cls._sort(class_scoped),
             'lazy': cls._sort(lazy_fixtures),
         }
-        return ret
 
 
 class ClassFixturesAreContextManagers(CaseBuilder):

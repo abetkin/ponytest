@@ -46,8 +46,8 @@ class TestLoader(_TestLoader):
                 return self.suiteClass([])
 
             suites = []
-            for chain, _ in fixture_mgr:
-                builder = CaseBuilder.factory(parent, chain, [name])
+            for _, fixtures, config in fixture_mgr:
+                builder = CaseBuilder.factory(parent, fixtures, [name], config)
                 s = builder.make_suite()
                 suites.append(s)
             if not suites:
