@@ -403,10 +403,6 @@ class FixtureManager(object):
                     for p in providers
                 ]
 
-    # def get_providers(self, passed_value):
-    #     TODO
-    #     True => read from console
-
     def iter_test_configs(self):
         'yield names, config_obj'
         klass = self.klass
@@ -423,4 +419,5 @@ class FixtureManager(object):
                 yield [name], merge_attrs(func, klass)
                 continue
             non_special.append(name)
-        yield non_special, klass
+        if non_special:
+            yield non_special, klass

@@ -15,23 +15,3 @@ lazy fixtures: make concept better
 
 ipdb: wtf with the console output ?
 
------
-
-use value provided for a fixture: {'timeout': 10}
-
------
-
-class T:
-
-    fixture_providers = {
-        'db': [MyClass],
-        'db': handler,
-        'db': ['val1', 'val2'],
-    }
-
-    include_fixtures = ['db']
-
-    fixtures_config = {
-        'timeout': 10,
-        {'
-    }
