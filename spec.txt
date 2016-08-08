@@ -15,3 +15,17 @@ lazy fixtures: make concept better
 
 ipdb: wtf with the console output ?
 
+----
+
+pony_fixtures = []
+fixture_providers = {
+    'db': ['sqlite'],
+}
+{
+    'db': {'sqlite': Provider},
+    'db': handler,
+}
+
+---------
+
+test_fixtures, class_fixtures, no 'scope' attribute

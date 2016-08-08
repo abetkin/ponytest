@@ -1,24 +1,24 @@
 
 from functools import wraps, partial
 from itertools import product
-from collections import deque, Iterable
+from collections import deque, Iterable, Mapping
 
 from .utils import PY2, ContextManager, ValidationError, add_metaclass, no_op, \
-        merge_attrs
+        merge_attrs, with_cli_args
+import click
 if not PY2:
     from contextlib import contextmanager, ExitStack, ContextDecorator
 else:
     from contextlib2 import contextmanager, ExitStack, ContextDecorator
 
-import unittest
+from .config import fixture_providers, fixture_handlers, pony_fixtures
 
-from collections import OrderedDict
+
+import unittest
 
 from .is_standalone import is_standalone_use
 
 
-pony_fixtures = OrderedDict()
-fixture_providers = {}
 
 def provider(key=None, provider=None, **kwargs):
     def decorator(obj, key=key, provider=provider):
@@ -29,7 +29,8 @@ def provider(key=None, provider=None, **kwargs):
         else:
             assert obj.KEY == key
         if provider is None:
-            provider = getattr(obj, 'PROVIDER', getattr(obj, '__name__', None))
+            assert fixture_providers.get(key, {}).get('default', obj) is obj
+            provider = 'default'
 
         elif not hasattr(obj, 'PROVIDER'):
             obj.PROVIDER = provider
@@ -216,7 +217,6 @@ class CaseBuilder(object):
         class_scoped.append(
             SetupTeardownFixture(_setUpClass, _tearDownClass)
         )
-
         return {
             'test': cls._sort(test_scoped),
             'class': cls._sort(class_scoped),
@@ -362,7 +362,8 @@ class FixtureManager(object):
         self.test_level_config = test_level_config
 
     def __iter__(self):
-        for names, config in self.iter_test_configs():
+        configs = list(self.iter_test_configs())
+        for names, config in configs:
             provider_sets = [l for l in self.iter_provider_sets(config) if l]
             for fixtures in product(*provider_sets):
                 try:
@@ -375,33 +376,53 @@ class FixtureManager(object):
                     continue
                 yield names, fixtures, config
 
-    def iter_provider_sets(self, config, pony_fixtures=pony_fixtures):
-        pony_fixtures = getattr(config, 'pony_fixtures', pony_fixtures)
-        pony_fixtures = OrderedDict(pony_fixtures)
-        if hasattr(config, 'update_fixtures'):
-            pony_fixtures.update(config.update_fixtures)
-        if hasattr(config, 'exclude_fixtures'):
-            pony_fixtures.update(
-                dict.fromkeys(config.exclude_fixtures, ())
+    def iter_provider_sets(self, config,
+                           pony_fixtures=pony_fixtures,
+                           fixture_handlers=fixture_handlers,
+                           fixture_providers=fixture_providers):
+        if hasattr(config, 'pony_fixtures'):
+            pony_fixtures = config.pony_fixtures
+        else:
+            pony_fixtures = list(pony_fixtures) + list(
+                getattr(config, 'include_fixtures', ())
             )
-        if hasattr(config, 'include_fixtures'):
-            pony_fixtures.update(
-                dict.fromkeys(config.include_fixtures, True)
-            )
+        pony_fixtures = [
+            p for p in pony_fixtures if p not in getattr(config, 'exclude_fixtures', ())
+        ]
         if hasattr(config, 'lazy_fixtures'):
-            pony_fixtures.update(
-                dict.fromkeys(config.lazy_fixtures, True)
-            )
-        for key, providers in pony_fixtures.items():
-            if callable(providers):
-                providers = providers()
-            if providers is True:
-                yield fixture_providers[key].values()
+            pony_fixtures += [
+                f for f in config.lazy_fixtures if f not in pony_fixtures
+            ]
+        if hasattr(config, 'fixture_providers'):
+            fixture_providers = dict(fixture_providers)
+            for key, providers in config.fixture_providers.items():
+                if isinstance(providers, Mapping):
+                    fixture_providers.setdefault(key, {}).update(providers)
+                else:
+                    fixture_providers[key] = {
+                        k: v for k, v in fixture_providers[key].items()
+                        if k in providers
+                    }
+        if hasattr(config, 'fixture_handlers'):
+            fixture_handlers = dict(fixture_handlers, **config.fixture_handlers)
+
+        for key in pony_fixtures:
+            all_providers = fixture_providers[key]
+            if not all_providers:
+                yield ()
+                continue
+            handler = fixture_handlers.get(key)
+            if handler:
+                providers = handler(key, all_providers)
             else:
-                yield [
-                    p if callable(p) else fixture_providers[key][p]
-                    for p in providers
-                ]
+                providers = fixture_handlers['__default__'](key, all_providers)
+
+            providers = list(providers)
+
+            yield [
+                fixture_providers[key][p]
+                for p in providers
+            ]
 
     def iter_test_configs(self):
         'yield names, config_obj'
@@ -413,11 +434,14 @@ class FixtureManager(object):
         for name in self.names:
             func = getattr(klass, name)
             if any(hasattr(func, attr) for attr in (
-                'test_scoped', 'class_scoped', 'update_fixtures', 'include_fixtures', 'exclude_fixtures',
-                'pony_fixtures',
+                'test_scoped', 'class_scoped', 'include_fixtures', 'exclude_fixtures',
+                'pony_fixtures', 'fixture_providers',
             )):
                 yield [name], merge_attrs(func, klass)
                 continue
             non_special.append(name)
         if non_special:
             yield non_special, klass
+
+
+

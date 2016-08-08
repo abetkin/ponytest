@@ -1,5 +1,5 @@
 import click
-from ponytest import with_cli_args, class_property, pony_fixtures, providers
+from ponytest import with_cli_args, class_property, pony_fixtures, fixture_providers as providers
 
 import sys
 PY2 = sys.version_info[0] == 2
@@ -29,21 +29,6 @@ class Option(ContextDecorator):
 
 
 
-@with_cli_args
-@click.option('-o', '--option', 'options', multiple=True)
-def cli(options):
-    return options
-
-def fixtures(names):
-    for name in names:
-        f = partial(Option, name=name)
-        f.KEY = Option.KEY
-        yield name, f
-
-
-providers['myfixture'] = dict(fixtures('12'))
-
-
 class TestMultiple(unittest.TestCase):
 
     class Case(unittest.TestCase):
@@ -55,17 +40,15 @@ class TestMultiple(unittest.TestCase):
 
     output = []
 
-    @class_property
-    def pony_fixtures(cls):
-        try:
-            length = len(sys.argv)
-            sys.argv.extend(['-o', '1', '-o', '2'])
-            return {
-                'myfixture': cli()
-            }
-        finally:
-            sys.argv = sys.argv[:length]
+    fixture_providers = {
+        'myfixture': {
+            '1': partial(Option, name='1'),
+            '2': partial(Option, name='2'),
 
+        }
+    }
+
+    pony_fixtures = ['myfixture']
 
     def test(self):
         self.output.append(self.option_value)

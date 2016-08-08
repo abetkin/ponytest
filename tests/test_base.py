@@ -25,11 +25,8 @@ class TestCaseScoped(TestCase):
 
     simplest.scope = 'class'
 
-    pony_fixtures = enumerate([
-        [simplest]
-    ])
-
-    del simplest
+    pony_fixtures = ['simplest']
+    fixture_providers = {'simplest': {0: simplest}}
 
     def test(self):
         self.assertTrue(self.added_attribute)
@@ -44,9 +41,8 @@ class TestTestScoped(TestCase):
         test.added_attribute = 'attr'
         yield
 
-    pony_fixtures = enumerate([
-        [simplest]
-    ])
+    pony_fixtures = ['simplest']
+    fixture_providers = {'simplest': {0: simplest}}
 
 
     def test(self):
@@ -57,27 +53,32 @@ class TestCliNeg(TestCase):
 
     output = ()
 
+    @contextmanager
+    def simplest(test):
+        test.output = ['item']
+        yield
+
+    fixture_providers = {'simplest': {0: simplest}}
+
     @class_property
     def cli_handle(cls):
 
-        @contextmanager
-        def simplest(test):
-            test.output = ['item']
-            yield
+
 
         @with_cli_args
         @click.option('--on', 'is_on', is_flag=True)
-        def handle(is_on):
+        def handle(key, providers, is_on): # TODO as keywords
             if is_on:
-                yield simplest
+                yield 0
 
 
         return handle
 
+    pony_fixtures = ['simplest']
 
     @class_property
-    def pony_fixtures(cls):
-        return enumerate([cls.cli_handle])
+    def fixture_handlers(cls):
+        return {'simplest': cls.cli_handle}
 
     def test(self):
         self.assertFalse(self.output)
@@ -88,10 +89,10 @@ class TestCliPos(TestCliNeg):
 
     @class_property
     def cli_handle(cls):
-        def handle():
+        def handle(key, providers):
             try:
                 sys.argv.append('--on')
-                return TestCliNeg.cli_handle()
+                return TestCliNeg.cli_handle(key, providers)
             finally:
                 sys.argv.remove('--on')
         return handle
@@ -106,10 +107,10 @@ class TestExcludeFixtures(TestCase):
         raise Exception
 
     exclude_fixtures = ['F']
-    pony_fixtures = {
-        'F': [raises_exc]
+    fixture_providers = {
+        'F': {'exc': raises_exc}
     }
-    del raises_exc
+    pony_fixtures = ['F']
 
     def test(self):
         self.assertTrue(1)
@@ -127,7 +128,8 @@ class TestLevelConfig(TestCase):
         test.attr = 2
         yield
 
-    update_fixtures = {'f': [f1]}
+    fixture_providers = {'f': {0: f1}}
+    pony_fixtures = ['f']
 
     def test_1(self):
         self.assertEqual(self.attr, 1)
@@ -138,6 +140,6 @@ class TestLevelConfig(TestCase):
             self.assertEqual(self.attr, 1) # test-level config is not supported
         else:
             self.assertEqual(self.attr, 2)
-    test_2.update_fixtures = {'f': [f2]}
+    test_2.fixture_providers = {'f': {0: f2}}
 
     del f1, f2

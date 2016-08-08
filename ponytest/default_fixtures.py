@@ -16,7 +16,7 @@ else:
 
 
 
-@provider('ipdb', weight=10)
+@provider('ipdb', weight=10, enabled=False)
 @contextmanager
 def ipdb_context(test):
     from ipdb import post_mortem
@@ -30,32 +30,40 @@ def ipdb_context(test):
         raise exc
 
 
-@provider('ipdb_all', scope='class', weight=-10)
+@provider('ipdb_all', scope='class', weight=-10, enabled=False)
 @contextmanager
 def ipdb_class_scope(cls):
     with ipdb_context(cls):
         yield
 
 
-@with_cli_args
-@click.option('--ipdb', 'debug', is_flag=True)
-def enable_ipdb(debug):
-    if debug:
-        yield ipdb_context
+# @with_cli_args
+# @click.option('--ipdb', 'debug', is_flag=True)
+# def enable_ipdb(debug):
+#     if debug:
+#         yield ipdb_context
 
 
 
 @with_cli_args
 @click.option('--ipdb', 'debug', is_flag=True)
-def enable_ipdb_all(debug):
+def enable_ipdb_all(key, providers, debug):
     if debug:
-        yield ipdb_class_scope
+        for p in providers:
+            yield p
+
+from .config import fixture_handlers
+
+fixture_handlers['ipdb_all'] = enable_ipdb_all
 
 
+# debugger_support = OrderedDict([
+#     ('ipdb_all', enable_ipdb_all),
+#     ('ipdb', enable_ipdb),
+# ])
 
-debugger_support = OrderedDict([
-    ('ipdb_all', enable_ipdb_all),
-    ('ipdb', enable_ipdb),
-])
+debugger_support = [
+    'ipdb_all', 'ipdb'
+]
 
-pony_fixtures.update(debugger_support)
+

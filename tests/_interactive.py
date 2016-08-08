@@ -28,8 +28,7 @@ import unittest
 
 class TestDebug(unittest.TestCase):
 
-    update_fixtures = {'log': [use_log]}
-
+    include_fixtures = ['log']
 
     @classmethod
     def setUpClass(cls):
@@ -44,8 +43,10 @@ class TestDebug(unittest.TestCase):
 
 class NoIpdb(TestDebug):
 
-    update_fixtures = dict(
-        ipdb_all = (), ipdb = (), log = True,
+    include_fixtures = ['log']
+
+    fixture_providers = dict(
+        ipdb_all = (), ipdb = (),
     )
 
 

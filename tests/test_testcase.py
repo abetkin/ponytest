@@ -17,9 +17,8 @@ if is_standalone_use():
 
     class Test1(TestCase):
 
-        pony_fixtures = enumerate([
-            [simplest]
-        ])
+        pony_fixtures = ['simplest']
+        fixture_providers = {'simplest': {'simplest': simplest}}
 
         def test(self):
             self.assertTrue(self.added_attribute)
