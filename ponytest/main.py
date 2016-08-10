@@ -11,7 +11,7 @@ if not PY2:
 else:
     from contextlib2 import contextmanager, ExitStack, ContextDecorator
 
-from .config import fixture_providers, fixture_handlers, pony_fixtures
+from .config import fixture_providers, fixture_handlers, pony_fixtures, provider_validators
 
 
 import unittest
@@ -29,15 +29,13 @@ def provider(key=None, provider=None, **kwargs):
         else:
             assert obj.KEY == key
         if provider is None:
-            assert fixture_providers.get(key, {}).get('default', obj) is obj
-            provider = 'default'
-
-        elif not hasattr(obj, 'PROVIDER'):
+            provider = getattr(obj, 'PROVIDER', 'default')
+        if not hasattr(obj, 'PROVIDER'):
             obj.PROVIDER = provider
         else:
             assert obj.PROVIDER == provider
-        fixture_providers.setdefault(key, {}) \
-            [provider] = obj
+        assert fixture_providers.get(key, {}).get(obj.PROVIDER, obj) is obj
+        fixture_providers.setdefault(key, {})[provider] = obj
         for k, v in kwargs.items():
             setattr(obj, k, v)
         return obj
@@ -361,6 +359,9 @@ class FixtureManager(object):
         self.names = test_names
         self.test_level_config = test_level_config
 
+    def default_validate_chain(fixtures, klass):
+        return fixtures
+
     def __iter__(self):
         configs = list(self.iter_test_configs())
         for names, config in configs:
@@ -374,12 +375,15 @@ class FixtureManager(object):
                     ]
                 except ValidationError:
                     continue
+                # if not all(v(fixtures, self.klass) for v in validators):
+                #     continue
                 yield names, fixtures, config
 
     def iter_provider_sets(self, config,
                            pony_fixtures=pony_fixtures,
                            fixture_handlers=fixture_handlers,
-                           fixture_providers=fixture_providers):
+                           fixture_providers=fixture_providers,
+                           provider_validators=provider_validators):
         if hasattr(config, 'pony_fixtures'):
             pony_fixtures = config.pony_fixtures
         else:
@@ -405,6 +409,8 @@ class FixtureManager(object):
                     }
         if hasattr(config, 'fixture_handlers'):
             fixture_handlers = dict(fixture_handlers, **config.fixture_handlers)
+        if hasattr(config, 'provider_validators'):
+            provider_validators = dict(provider_validators, **config.provider_validators)
 
         for key in pony_fixtures:
             all_providers = fixture_providers[key]
@@ -419,10 +425,15 @@ class FixtureManager(object):
 
             providers = list(providers)
 
-            yield [
+            ret = [
                 fixture_providers[key][p]
                 for p in providers
             ]
+            validator = provider_validators.get(key)
+            if validator and not validator(ret, config):
+                continue
+            yield ret
+
 
     def iter_test_configs(self):
         'yield names, config_obj'
