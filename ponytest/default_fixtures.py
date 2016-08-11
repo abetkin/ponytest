@@ -54,7 +54,7 @@ class Ipdb(Fixture):
         def __exit__(self, *exc_info):
             from ipdb import post_mortem
             e, m, tb = exc_info
-            if not e.__module__.startswith('unittest'):
+            if e and not e.__module__.startswith('unittest'):
                 print(m.__repr__(), file=sys.stderr)
                 post_mortem(tb)
 

@@ -1,9 +1,4 @@
 
-1. class_scoped -> default_scopes = ['class']
-
-
-
-generic way to enable / disable fixtures (cli)
 
 --db sqlite,postgres --ipdb --log
 
@@ -17,15 +12,4 @@ ipdb: wtf with the console output ?
 
 ----
 
-pony_fixtures = []
-fixture_providers = {
-    'db': ['sqlite'],
-}
-{
-    'db': {'sqlite': Provider},
-    'db': handler,
-}
-
----------
-
-test_fixtures, class_fixtures, no 'scope' attribute
+namespaces ? Fixture(ns)

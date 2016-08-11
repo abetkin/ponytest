@@ -21,7 +21,7 @@ class Simplest(Fixture):
 
     @Fixture.provider(KEY)
     @contextmanager
-    def default_provider(cls):
+    def add_attr(cls):
         cls.added_attribute = 'attr'
         yield
 
@@ -50,32 +50,35 @@ class TestCliNeg(TestCase):
 
     output = ()
 
-    @contextmanager
-    def simplest(test):
-        test.output = ['item']
-        yield
+    class Simplest(Fixture):
+        KEY = 'cli.simplest'
 
-    fixture_providers = {'simplest': {0: simplest}}
+        @Fixture.provider(KEY)
+        @contextmanager
+        def simplest(test):
+            test.output = ['item']
+            yield
+
 
     @class_property
-    def cli_handle(cls):
+    def cli_handle(cls, **kwargs):
 
 
 
         @with_cli_args
         @click.option('--on', 'is_on', is_flag=True)
-        def handle(providers, is_on): # TODO as keywords
+        def handle(is_on, **kwargs): # TODO as keywords
             if is_on:
-                yield 0
+                yield 'default'
 
 
         return handle
 
-    pony_fixtures = ['simplest']
+    pony_fixtures = {'test': [Simplest()]}
 
     @class_property
     def fixture_handlers(cls):
-        return {'simplest': cls.cli_handle}
+        return {'cli.simplest': cls.cli_handle}
 
     def test(self):
         self.assertFalse(self.output)
@@ -86,10 +89,10 @@ class TestCliPos(TestCliNeg):
 
     @class_property
     def cli_handle(cls):
-        def handle(providers):
+        def handle(**kwargs):
             try:
                 sys.argv.append('--on')
-                return TestCliNeg.cli_handle(providers)
+                return TestCliNeg.cli_handle(**kwargs)
             finally:
                 sys.argv.remove('--on')
         return handle
@@ -100,14 +103,15 @@ class TestCliPos(TestCliNeg):
 
 class TestExcludeFixtures(TestCase):
 
+    class F(Fixture):
+        KEY = 'F'
+
+    @Fixture.provider('F')
     def raises_exc(test):
         raise Exception
 
-    exclude_fixtures = ['F']
-    fixture_providers = {
-        'F': {'exc': raises_exc}
-    }
-    pony_fixtures = ['F']
+    exclude_fixtures = {'test': 'F'}
+    pony_fixtures = {'test': [F()]}
 
     def test(self):
         self.assertTrue(1)
@@ -115,18 +119,23 @@ class TestExcludeFixtures(TestCase):
 
 class TestLevelConfig(TestCase):
 
-    @contextmanager
-    def f1(test):
-        test.attr = 1
-        yield
+    class F(Fixture):
+        KEY = 'tlf'
 
-    @contextmanager
-    def f2(test):
-        test.attr = 2
-        yield
+        @Fixture.provider(KEY, 'p1')
+        @contextmanager
+        def p1(test):
+            test.attr = 1
+            yield
 
-    fixture_providers = {'f': {0: f1}}
-    pony_fixtures = ['f']
+        @Fixture.provider(KEY, 'p2')
+        @contextmanager
+        def p2(test):
+            test.attr = 2
+            yield
+
+    pony_fixtures = {'test': [F()]}
+    fixture_providers = {'tlf': ['p1']}
 
     def test_1(self):
         self.assertEqual(self.attr, 1)
@@ -137,6 +146,4 @@ class TestLevelConfig(TestCase):
             self.assertEqual(self.attr, 1) # test-level config is not supported
         else:
             self.assertEqual(self.attr, 2)
-    test_2.fixture_providers = {'f': {0: f2}}
-
-    del f1, f2
+    test_2.fixture_providers = {'tlf': ['p2']}

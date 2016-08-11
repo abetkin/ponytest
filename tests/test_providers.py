@@ -9,32 +9,35 @@ if not PY2:
 else:
     from contextlib2 import contextmanager, ContextDecorator
 
-class Option(ContextDecorator):
+from ponytest import Fixture
+
+class F(Fixture):
     KEY = 'myfixture'
 
-    def __init__(self, test, name):
-        self.name = name
-        self.test = test
+    class Option(ContextDecorator):
 
-    def __enter__(self):
-        self.test.option_value = self.name
-        return 'value'
+        def __init__(self, test, name):
+            self.name = name
+            self.test = test
 
-    __exit__ = lambda *args: None
+        def __enter__(self):
+            self.test.option_value = self.name
+            return 'value'
 
-    @classmethod
-    def make(cls, name):
-        ret = partial(Option, name=name)
-        ret.KEY = 'myfixture'
-        return ret
+        __exit__ = lambda *args: None
+
+        @classmethod
+        def make(cls, name):
+            ret = partial(cls, name=name)
+            ret.KEY = 'myfixture'
+            return ret
+
+    providers = {
+        '1': partial(Option, name='1'),
+        '2': partial(Option, name='2'),
+    }
 
 
-from ponytest import fixture_providers
-
-fixture_providers['myfixture'] = {
-    '1': Option.make('1'),
-    '2': Option.make('2'),
-}
 
 class Test(unittest.TestCase):
 
@@ -42,7 +45,7 @@ class Test(unittest.TestCase):
         'myfixture': ['2']
     }
 
-    pony_fixtures = ['myfixture']
+    pony_fixtures = {'test': [F()]}
 
     def test(self):
         self.assertEqual(self.option_value, '2')
