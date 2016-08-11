@@ -1,7 +1,7 @@
 
 from functools import wraps, partial
 from itertools import product
-from collections import deque, Iterable, Mapping
+from collections import deque, Iterable, Mapping, namedtuple
 
 from .utils import PY2, ContextManager, ValidationError, add_metaclass, no_op, \
         merge_attrs, with_cli_args
@@ -20,26 +20,26 @@ from .is_standalone import is_standalone_use
 
 
 
-def provider(key=None, provider=None, **kwargs):
-    def decorator(obj, key=key, provider=provider):
-        if key is None:
-            key = obj.KEY
-        elif not hasattr(obj, 'KEY'):
-            obj.KEY = key
-        else:
-            assert obj.KEY == key
-        if provider is None:
-            provider = getattr(obj, 'PROVIDER', 'default')
-        if not hasattr(obj, 'PROVIDER'):
-            obj.PROVIDER = provider
-        else:
-            assert obj.PROVIDER == provider
-        assert fixture_providers.get(key, {}).get(obj.PROVIDER, obj) is obj
-        fixture_providers.setdefault(key, {})[provider] = obj
-        for k, v in kwargs.items():
-            setattr(obj, k, v)
-        return obj
-    return decorator
+# def provider(key=None, provider=None, **kwargs):
+#     def decorator(obj, key=key, provider=provider):
+#         if key is None:
+#             key = obj.KEY
+#         elif not hasattr(obj, 'KEY'):
+#             obj.KEY = key
+#         else:
+#             assert obj.KEY == key
+#         if provider is None:
+#             provider = getattr(obj, 'PROVIDER', 'default')
+#         if not hasattr(obj, 'PROVIDER'):
+#             obj.PROVIDER = provider
+#         else:
+#             assert obj.PROVIDER == provider
+#         assert fixture_providers.get(key, {}).get(obj.PROVIDER, obj) is obj
+#         fixture_providers.setdefault(key, {})[provider] = obj
+#         for k, v in kwargs.items():
+#             setattr(obj, k, v)
+#         return obj
+#     return decorator
 
 
 def SetupTeardownFixture(setUpFunc, tearDownFunc):
@@ -113,24 +113,23 @@ class CaseBuilder(object):
 
     def __init__(self, testcase_cls, fixtures, names, config):
         self.klass = testcase_cls
-        try:
-            fixtures['class'], fixtures['test'], fixtures['lazy']
-        except:
-            fixtures = self._group_by_scope(testcase_cls, fixtures, config)
+        # try:
+        #     fixtures['class'], fixtures['test'], fixtures['lazy']
+        # except:
+        #     fixtures = self._group_by_scope(testcase_cls, fixtures, config)
         self.fixtures = fixtures
         self.names = names
         self.config = config
 
     @classmethod
     def factory(cls, testcase_cls, fixtures, names, config):
-        scopes = cls._group_by_scope(testcase_cls, fixtures, config)
-        for F in scopes['class']:
+        for F in fixtures['class']:
             if not isinstance(F(testcase_cls), ContextManager):
                 builder = ClassFixturesCanBeCallables
                 break
         else:
             builder = ClassFixturesAreContextManagers
-        return builder(testcase_cls, scopes, names, config)
+        return builder(testcase_cls, fixtures, names, config)
 
     def prepare_case(self):
         '''
@@ -154,72 +153,72 @@ class CaseBuilder(object):
         return ret
 
     @staticmethod
-    def _sort(fixtures):
+    def _sorted(fixtures):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
 
-    @staticmethod
-    def _is_test_scoped(fixture, config):
-        if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(config, 'test_scoped', ()):
-                return True
-            if fixture.KEY not in getattr(config, 'test_scoped', ()) \
-                    and  fixture.KEY in getattr(config, 'class_scoped', ()):
-                return False
-        return getattr(fixture, 'scope', 'test') == 'test'
+    # @staticmethod
+    # def _is_test_scoped(fixture, config):
+    #     if fixture.KEY in getattr(config, 'test_scoped', ()):
+    #         return True
+    #     if fixture.KEY not in getattr(config, 'test_scoped', ()) \
+    #             and  fixture.KEY in getattr(config, 'class_scoped', ()):
+    #         return False
+    #     return getattr(fixture, 'scope', 'test') == 'test'
 
-    @staticmethod
-    def _is_class_scoped(fixture, config):
-        if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(config, 'class_scoped', ()):
-                return True
-            if fixture.KEY not in getattr(config, 'class_scoped', ()) \
-                    and  fixture.KEY in getattr(config, 'test_scoped', ()):
-                return False
-        return getattr(fixture, 'scope', 'test') == 'class'
+    # @staticmethod
+    # def _is_class_scoped(fixture, config):
+    #     if fixture.KEY in getattr(config, 'class_scoped', ()):
+    #         return True
+    #     if fixture.KEY not in getattr(config, 'class_scoped', ()) \
+    #             and  fixture.KEY in getattr(config, 'test_scoped', ()):
+    #         return False
+    #     return getattr(fixture, 'scope', 'test') == 'class'
 
-    @staticmethod
-    def _is_lazy(fixture, config):
-        if hasattr(fixture, 'KEY'):
-            if fixture.KEY in getattr(config, 'lazy_fixtures', ()):
-                return True
-        return getattr(fixture, 'scope', 'test') == 'lazy'
+    # @staticmethod
+    # def _is_lazy(fixture, config):
+    #     if fixture.KEY in getattr(config, 'lazy_fixtures', ()):
+    #         return True
+    #     return getattr(fixture, 'scope', 'test') == 'lazy'
 
-    @classmethod
-    def _group_by_scope(cls, klass, fixtures, config):
-        test_scoped = []
-        class_scoped = []
-        lazy_fixtures = []
+    # @classmethod
+    # def _group_by_scope(cls, klass, fixtures, config):
+    #     import ipdb; ipdb.set_trace()
+    #     test_scoped = []
+    #     class_scoped = []
+    #     lazy_fixtures = []
 
-        for F in fixtures:
-            if cls._is_lazy(F, config):
-                lazy_fixtures.append(F)
-                continue
-            if cls._is_test_scoped(F, config):
-                test_scoped.append(F)
-            if cls._is_class_scoped(F, config):
-                class_scoped.append(F)
+    #     for F in fixtures:
+    #         if cls._is_lazy(F, config):
+    #             lazy_fixtures.append(F)
+    #             continue
+    #         if cls._is_test_scoped(F, config):
+    #             test_scoped.append(F)
+    #         if cls._is_class_scoped(F, config):
+    #             class_scoped.append(F)
 
-        _setUp = klass.setUp
-        if PY2:
-            _setUp = _setUp.__func__
-        _tearDown = klass.tearDown
-        if PY2:
-            _tearDown = _tearDown.__func__
+    #     _setUp = klass.setUp
+    #     if PY2:
+    #         _setUp = _setUp.__func__
+    #     _tearDown = klass.tearDown
+    #     if PY2:
+    #         _tearDown = _tearDown.__func__
 
-        test_scoped.append(
-            SetupTeardownFixture(_setUp, _tearDown)
-        )
+    #     test_scoped.append(
+    #         SetupTeardownFixture(_setUp, _tearDown)
+    #     )
 
-        _setUpClass = klass.setUpClass.__func__
-        _tearDownClass = klass.tearDownClass.__func__
-        class_scoped.append(
-            SetupTeardownFixture(_setUpClass, _tearDownClass)
-        )
-        return {
-            'test': cls._sort(test_scoped),
-            'class': cls._sort(class_scoped),
-            'lazy': cls._sort(lazy_fixtures),
-        }
+    #     _setUpClass = klass.setUpClass.__func__
+    #     _tearDownClass = klass.tearDownClass.__func__
+    #     class_scoped.append(
+    #         SetupTeardownFixture(_setUpClass, _tearDownClass)
+    #     )
+    #     ret ={
+    #         'test': cls._sort(test_scoped),
+    #         'class': cls._sort(class_scoped),
+    #         'lazy': cls._sort(lazy_fixtures),
+    #     }
+    #     print('ret', ret)
+    #     return ret
 
 
 class ClassFixturesAreContextManagers(CaseBuilder):
@@ -233,7 +232,9 @@ class ClassFixturesAreContextManagers(CaseBuilder):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = [F(test) for F in self.fixtures['test']]
+                fixtures = self._sorted(
+                    [F(test) for F in self.fixtures['test']]
+                )
                 if not all(isinstance(f, ContextManager) for f in fixtures):
                     for wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
@@ -250,9 +251,11 @@ class ClassFixturesAreContextManagers(CaseBuilder):
 
         def setUpClass(cls, *arg, **kw):
             stack = stack_holder[0]
+            fixtures = self._sorted(
+                [Ctx(cls) for Ctx in self.fixtures['class']]
+            )
             with stack:
-                for Ctx in self.fixtures['class']:
-                    ctx = Ctx(cls)
+                for ctx in fixtures:
                     stack.enter_context(ctx)
                 stack_holder[0] = stack.pop_all()
         dic['setUpClass'] = classmethod(setUpClass)
@@ -286,7 +289,9 @@ class ClassFixturesCanBeCallables(CaseBuilder):
             )
             s(result)
 
-        fixtures = [F(testcase_cls) for F in self.fixtures['class']]
+        fixtures = self._sorted(
+            [F(testcase_cls) for F in self.fixtures['class']]
+        )
         if not all(isinstance(f, ContextManager) for f in fixtures):
             for wrapper in reversed(fixtures):
                 func = wrapper(func)
@@ -330,7 +335,9 @@ class ClassFixturesCanBeCallables(CaseBuilder):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = [F(test) for F in self.fixtures['test']]
+                fixtures = self._sorted(
+                    [F(test) for F in self.fixtures['test']]
+                )
                 if not all(isinstance(f, ContextManager) for f in fixtures):
                     for wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
@@ -351,6 +358,7 @@ class ClassFixturesCanBeCallables(CaseBuilder):
         runCase = partial(self.runCase, Case)
         return unittest.TestSuite([runCase])
 
+SCOPES = ('test', 'class', 'lazy')
 
 class FixtureManager(object):
 
@@ -359,81 +367,53 @@ class FixtureManager(object):
         self.names = test_names
         self.test_level_config = test_level_config
 
-    def default_validate_chain(fixtures, klass):
-        return fixtures
+    def get_fixtures(self, config, scope):
+        config_fixtures = getattr(config, 'pony_fixtures', {})
+        fixtures = config_fixtures.get(scope, ()) or pony_fixtures.get(scope, ())
+        return [
+            Fixture._registry[f] if isinstance(f, str) else f
+            for f in fixtures
+        ]
 
     def __iter__(self):
         configs = list(self.iter_test_configs())
+        ScopedProvider = namedtuple('ScopedProvider', ['scope', 'provider'])
         for names, config in configs:
-            provider_sets = [l for l in self.iter_provider_sets(config) if l]
-            for fixtures in product(*provider_sets):
-                try:
-                    fixtures = [
-                        f for f in fixtures if f is not None
-                        if not hasattr(f, 'validate_chain')
-                        or f.validate_chain(fixtures, self.klass)
-                    ]
-                except ValidationError:
-                    continue
-                # if not all(v(fixtures, self.klass) for v in validators):
-                #     continue
-                yield names, fixtures, config
-
-    def iter_provider_sets(self, config,
-                           pony_fixtures=pony_fixtures,
-                           fixture_handlers=fixture_handlers,
-                           fixture_providers=fixture_providers,
-                           provider_validators=provider_validators):
-        if hasattr(config, 'pony_fixtures'):
-            pony_fixtures = config.pony_fixtures
-        else:
-            pony_fixtures = list(pony_fixtures) + list(
-                getattr(config, 'include_fixtures', ())
-            )
-        pony_fixtures = [
-            p for p in pony_fixtures if p not in getattr(config, 'exclude_fixtures', ())
-        ]
-        if hasattr(config, 'lazy_fixtures'):
-            pony_fixtures += [
-                f for f in config.lazy_fixtures if f not in pony_fixtures
+            provider_sets = [
+                [ScopedProvider(scope, p) for p in providers]
+                for scope in SCOPES
+                for providers in self.iter_provider_sets(config, scope)
+                if providers
             ]
-        if hasattr(config, 'fixture_providers'):
-            fixture_providers = dict(fixture_providers)
-            for key, providers in config.fixture_providers.items():
-                if isinstance(providers, Mapping):
-                    fixture_providers.setdefault(key, {}).update(providers)
+
+            for chain in product(*provider_sets):
+                fixtures = {}
+                for scope in SCOPES:
+                    fixtures[scope] = [f.provider for f in chain if f.scope == scope]
+                    pony_fixtures = self.get_fixtures(config, scope)
+                    if not all(f.validate_fixtures(fixtures[scope], config)
+                               for f in pony_fixtures):
+                        break
                 else:
-                    fixture_providers[key] = {
-                        k: v for k, v in fixture_providers[key].items()
-                        if k in providers
-                    }
-        if hasattr(config, 'fixture_handlers'):
-            fixture_handlers = dict(fixture_handlers, **config.fixture_handlers)
-        if hasattr(config, 'provider_validators'):
-            provider_validators = dict(provider_validators, **config.provider_validators)
+                    yield names, fixtures, config
 
-        for key in pony_fixtures:
-            all_providers = fixture_providers[key]
-            if not all_providers:
-                yield ()
-                continue
-            handler = fixture_handlers.get(key)
-            if handler:
-                providers = handler(key, all_providers)
-            else:
-                providers = fixture_handlers['__default__'](key, all_providers)
-
-            providers = list(providers)
-
-            ret = [
-                fixture_providers[key][p]
-                for p in providers
+    def iter_provider_sets(self, config, scope):
+        pony_fixtures = self.get_fixtures(config, scope)
+        if hasattr(config, 'include_fixtures'):
+            pony_fixtures.extend(
+                [self._registry[f] for f in config.include_fixtures]
+            )
+        if hasattr(config, 'exclude_fixtures'):
+            pony_fixtures = [
+                f for f in pony_fixtures if f.KEY not in config.exclude_fixtures
             ]
-            validator = provider_validators.get(key)
-            if validator and not validator(ret, config):
-                continue
-            yield ret
+        for f in pony_fixtures:
+            yield f._get_providers(config)
 
+    CONFIG_ATTRS = (
+        'pony_fixtures', 'include_fixtures', 'exclude_fixtures',
+        'fixture_providers', 'fixture_handlers', 'fixture_validators',
+    )
 
     def iter_test_configs(self):
         'yield names, config_obj'
@@ -444,10 +424,7 @@ class FixtureManager(object):
         non_special = []
         for name in self.names:
             func = getattr(klass, name)
-            if any(hasattr(func, attr) for attr in (
-                'test_scoped', 'class_scoped', 'include_fixtures', 'exclude_fixtures',
-                'pony_fixtures', 'fixture_providers',
-            )):
+            if any(hasattr(func, attr) for attr in self.CONFIG_ATTRS):
                 yield [name], merge_attrs(func, klass)
                 continue
             non_special.append(name)
@@ -455,4 +432,91 @@ class FixtureManager(object):
             yield non_special, klass
 
 
+class Fixture(object):
+    _registry = {}
+    KEY = None
 
+    def __new__(cls, *args, **kw):
+        ret = super(Fixture, cls).__new__(cls, *args, **kw)
+        assert ret.KEY
+        cls._registry[ret.KEY] = ret
+        if hasattr(ret, 'default_provider') and not hasattr(ret, 'providers'):
+            ret.provider()(ret.default_provider)
+        return ret
+
+    def handler(self, **kwargs):
+        providers = self.providers
+        key = self.KEY
+        formatted_key =  key.replace('_', '-')
+        option = ''.join(('--', formatted_key))
+        no_option = '-'.join(('--no', formatted_key))
+        if len(providers) == 1:
+            @with_cli_args
+            @click.option(option, 'enabled', is_flag=True)
+            @click.option(no_option, 'disabled', is_flag=True)
+            def single_provider(enabled, disabled):
+                if disabled:
+                    return ()
+                provider_key = next(p for p in providers)
+                if enabled:
+                    return (provider_key,)
+                provider = providers[provider_key]
+                if getattr(provider, 'enabled', True):
+                    return (provider_key,)
+                return ()
+            return single_provider()
+
+        @with_cli_args
+        @click.option(option, 'included', multiple=True)
+        @click.option(no_option, 'excluded', multiple=True)
+        def multiple_providers(included, excluded, providers=providers):
+            providers = {k: v for k, v in providers.items()
+                        if not included or k in included
+                        if not excluded or k not in excluded}
+            if included or excluded:
+                return providers
+            return (key for key, p in providers.items()
+                    if getattr(p, 'enabled', True))
+
+        return multiple_providers()
+
+
+    _providers = {}
+
+    @property
+    def providers(self):
+        return self._providers[self.KEY]
+
+    @classmethod
+    def provider(cls, key, **kwargs):
+        def decorator(obj, provider='default'):
+            for k, v in kwargs.items():
+                setattr(obj, k, v)
+            cls._providers.setdefault(key, {})[provider] = obj
+            return obj
+        return decorator
+
+    def validate_fixtures(self, fixtures, config):
+        return True
+
+    def _get_providers(self, config):
+        providers = self.providers
+        if hasattr(config, 'fixture_providers'):
+            use_providers = config.fixture_providers.get(self.KEY)
+            if isinstance(use_providers, Mapping):
+                providers = dict(providers, **use_providers)
+            else:
+                providers = {
+                    k: v for k, v in self.providers.items()
+                    if k in use_providers
+                }
+        if hasattr(config, 'fixture_handlers') and config.fixture_handlers.get(self.KEY):
+            handler = config.fixture_handlers[self.KEY]
+        else:
+            handler = self.handler
+        if not self.providers:
+            return ()
+        providers = handler(key=self.KEY, providers=self.providers)
+        return [
+            self.providers[p] for p in providers
+        ]

@@ -1,7 +1,7 @@
 
 from functools import wraps
 import click
-from ponytest import with_cli_args, class_property, pony_fixtures, TestCase
+from ponytest import with_cli_args, class_property, pony_fixtures, TestCase, Fixture
 
 import sys
 PY2 = sys.version_info[0] == 2
@@ -15,18 +15,22 @@ else:
 import unittest
 import collections
 
-class TestCaseScoped(TestCase):
 
+class Simplest(Fixture):
+    KEY = 'simplest'
+
+    @Fixture.provider(KEY)
     @contextmanager
-    def simplest(cls):
-        assert isinstance(cls, type)
+    def default_provider(cls):
         cls.added_attribute = 'attr'
         yield
 
-    simplest.scope = 'class'
 
-    pony_fixtures = ['simplest']
-    fixture_providers = {'simplest': {0: simplest}}
+Simplest()
+
+class TestCaseScoped(TestCase):
+
+    pony_fixtures = {'class': ['simplest']}
 
     def test(self):
         self.assertTrue(self.added_attribute)
@@ -35,14 +39,7 @@ class TestCaseScoped(TestCase):
 
 class TestTestScoped(TestCase):
 
-    @contextmanager
-    def simplest(test):
-        assert isinstance(test, unittest.TestCase)
-        test.added_attribute = 'attr'
-        yield
-
-    pony_fixtures = ['simplest']
-    fixture_providers = {'simplest': {0: simplest}}
+    pony_fixtures = {'test': ['simplest']}
 
 
     def test(self):
@@ -67,7 +64,7 @@ class TestCliNeg(TestCase):
 
         @with_cli_args
         @click.option('--on', 'is_on', is_flag=True)
-        def handle(key, providers, is_on): # TODO as keywords
+        def handle(providers, is_on): # TODO as keywords
             if is_on:
                 yield 0
 
@@ -89,10 +86,10 @@ class TestCliPos(TestCliNeg):
 
     @class_property
     def cli_handle(cls):
-        def handle(key, providers):
+        def handle(providers):
             try:
                 sys.argv.append('--on')
-                return TestCliNeg.cli_handle(key, providers)
+                return TestCliNeg.cli_handle(providers)
             finally:
                 sys.argv.remove('--on')
         return handle
