@@ -32,10 +32,12 @@ class F(Fixture):
             ret.KEY = 'myfixture'
             return ret
 
-    providers = {
-        '1': partial(Option, name='1'),
-        '2': partial(Option, name='2'),
-    }
+    Fixture.provider(KEY, '1')(partial(Option, name='1'))
+    Fixture.provider(KEY, '2')(partial(Option, name='2'))
+    # providers = {
+    #     '1': partial(Option, name='1'),
+    #     '2': partial(Option, name='2'),
+    # }
 
 
 
@@ -55,6 +57,7 @@ class TestLazyFixture(unittest.TestCase):
     lazy_fixtures = ['myfixture']
 
     def test(self):
+        # FIXME executes 8 times
         with self.get_fixture('myfixture') as value:
             self.assertIn(self.option_value, '12')
             self.assertEqual(value, 'value')

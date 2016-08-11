@@ -54,6 +54,7 @@ def SetupTeardownFixture(setUpFunc, tearDownFunc):
     return fixture
 
 
+# use __provides__
 
 class LazyFixture(object):
     def __init__(self, lazy_fixtures):
@@ -63,7 +64,7 @@ class LazyFixture(object):
         Test = Test or test
 
         def get_fixture(name):
-            F = next(f for f in self.fixtures if f.KEY == name)
+            F = next(f for f in self.fixtures if f.__provides__ == name)
             fixture = F(Test)
             assert isinstance(fixture, ContextManager)
             return fixture
@@ -424,12 +425,15 @@ class Fixture(object):
     def providers(self):
         return self._providers.setdefault(self.KEY, {})
 
+    # TODO KEY -> __key__
+
     @classmethod
     def provider(cls, key, name='default', **kwargs):
         def decorator(obj):
             for k, v in kwargs.items():
                 setattr(obj, k, v)
             cls._providers.setdefault(key, {})[name] = obj
+            obj.__provides__ = key
             return obj
         return decorator
 
