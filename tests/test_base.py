@@ -17,16 +17,14 @@ import collections
 
 
 class Simplest(Fixture):
-    KEY = 'simplest'
+    __key__ = 'simplest'
 
-    @Fixture.provider(KEY)
+    @Fixture.provider(__key__)
     @contextmanager
     def add_attr(cls):
         cls.added_attribute = 'attr'
         yield
 
-
-Simplest()
 
 class TestCaseScoped(TestCase):
 
@@ -51,9 +49,9 @@ class TestCliNeg(TestCase):
     output = ()
 
     class Simplest(Fixture):
-        KEY = 'cli.simplest'
+        __key__ = 'cli.simplest'
 
-        @Fixture.provider(KEY)
+        @Fixture.provider(__key__)
         @contextmanager
         def simplest(test):
             test.output = ['item']
@@ -74,7 +72,7 @@ class TestCliNeg(TestCase):
 
         return handle
 
-    pony_fixtures = {'test': [Simplest()]}
+    pony_fixtures = {'test': [Simplest]}
 
     @class_property
     def fixture_handlers(cls):
@@ -104,14 +102,14 @@ class TestCliPos(TestCliNeg):
 class TestExcludeFixtures(TestCase):
 
     class F(Fixture):
-        KEY = 'F'
+        __key__ = 'F'
 
     @Fixture.provider('F')
     def raises_exc(test):
         raise Exception
 
-    exclude_fixtures = {'test': 'F'}
-    pony_fixtures = {'test': [F()]}
+    exclude_fixtures = {'test': ['F']}
+    pony_fixtures = {'test': [F]}
 
     def test(self):
         self.assertTrue(1)
@@ -120,21 +118,21 @@ class TestExcludeFixtures(TestCase):
 class TestLevelConfig(TestCase):
 
     class F(Fixture):
-        KEY = 'tlf'
+        __key__ = 'tlf'
 
-        @Fixture.provider(KEY, 'p1')
+        @Fixture.provider(__key__, 'p1')
         @contextmanager
         def p1(test):
             test.attr = 1
             yield
 
-        @Fixture.provider(KEY, 'p2')
+        @Fixture.provider(__key__, 'p2')
         @contextmanager
         def p2(test):
             test.attr = 2
             yield
 
-    pony_fixtures = {'test': [F()]}
+    pony_fixtures = {'test': [F]}
     fixture_providers = {'tlf': ['p1']}
 
     def test_1(self):

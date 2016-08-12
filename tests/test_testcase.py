@@ -1,24 +1,27 @@
 
-from ponytest import TestCase
+from ponytest import TestCase, Fixture
 
 from contextlib import contextmanager
 
-@contextmanager
-def simplest(cls):
-    assert isinstance(cls, type)
-    cls.added_attribute = 'attr'
-    yield
+class F1(Fixture):
+    __key__ = 'key1'
 
-simplest.scope = 'class'
-simplest.fixture_name = 'SI'
+    @Fixture.provider(__key__)
+    @contextmanager
+    def simplest(cls):
+        assert isinstance(cls, type)
+        cls.added_attribute = 'attr'
+        yield
+
+
+
 
 from ponytest.is_standalone import is_standalone_use
 if is_standalone_use():
 
     class Test1(TestCase):
 
-        pony_fixtures = ['simplest']
-        fixture_providers = {'simplest': {'simplest': simplest}}
+        pony_fixtures = {'class': [F1()]}
 
         def test(self):
             self.assertTrue(self.added_attribute)

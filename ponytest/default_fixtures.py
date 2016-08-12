@@ -17,7 +17,7 @@ else:
 
 
 class Ipdb(Fixture):
-    KEY = 'ipdb'
+    __key__ = 'ipdb'
 
     # @with_cli_args
     # @click.option('--ipdb', 'debug', is_flag=True)
@@ -26,7 +26,7 @@ class Ipdb(Fixture):
     #         for p in self.providers:
     #             yield p
 
-    # @Fixture.provider(KEY)
+    # @Fixture.provider(__key__)
     # def provider(Test):
     #     if isinstance(Test, type):
     #         return ipdb_class_scope(Test)
@@ -34,7 +34,7 @@ class Ipdb(Fixture):
 
     # provider.enabled = False
 
-    @Fixture.provider(KEY)
+    @Fixture.provider(__key__)
     class Provider(object):
 
         enabled = False

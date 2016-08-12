@@ -13,7 +13,7 @@ import unittest
 from functools import partial
 
 class Option(ContextDecorator):
-    KEY = 'myfixture'
+    __key__ = 'myfixture'
 
     def __init__(self, test, name):
         self.name = name

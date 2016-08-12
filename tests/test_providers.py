@@ -12,7 +12,7 @@ else:
 from ponytest import Fixture
 
 class F(Fixture):
-    KEY = 'myfixture'
+    __key__ = 'providers.F'
 
     class Option(ContextDecorator):
 
@@ -29,11 +29,11 @@ class F(Fixture):
         @classmethod
         def make(cls, name):
             ret = partial(cls, name=name)
-            ret.KEY = 'myfixture'
+            ret.__key__ = cls.__key__
             return ret
 
-    Fixture.provider(KEY, '1')(partial(Option, name='1'))
-    Fixture.provider(KEY, '2')(partial(Option, name='2'))
+    Fixture.provider(__key__, '1')(partial(Option, name='1'))
+    Fixture.provider(__key__, '2')(partial(Option, name='2'))
     # providers = {
     #     '1': partial(Option, name='1'),
     #     '2': partial(Option, name='2'),
@@ -44,7 +44,7 @@ class F(Fixture):
 class Test(unittest.TestCase):
 
     fixture_providers = {
-        'myfixture': ['2']
+        'providers.F': ['2']
     }
 
     pony_fixtures = {'test': [F()]}
@@ -54,12 +54,11 @@ class Test(unittest.TestCase):
 
 
 class TestLazyFixture(unittest.TestCase):
-    lazy_fixtures = ['myfixture']
+    lazy_fixtures = ['providers.F']
 
     def test(self):
         # FIXME executes 8 times
-        with self.get_fixture('myfixture') as value:
+        with self.get_fixture('providers.F') as value:
             self.assertIn(self.option_value, '12')
             self.assertEqual(value, 'value')
-
 
