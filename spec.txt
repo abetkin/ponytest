@@ -12,4 +12,20 @@ ipdb: wtf with the console output ?
 
 ----
 
-namespaces ? Fixture(ns)
+make __key__ optional; allow Fixture instances
+
+----
+
+interfaces: what is a fixture & provider
+
+----
+
+handler: return {'test': [...]}
+
+---
+
+fixture_key, provider_key
+
+---
+
+pass scope to handler

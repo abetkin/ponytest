@@ -40,7 +40,7 @@ class LazyFixture(object):
         Test = Test or test
 
         def get_fixture(name):
-            F = next(f for f in self.fixtures if f.__provides__ == name)
+            F = next(f for f in self.fixtures if f.__fixture__ == name)
             fixture = F(Test)
             assert isinstance(fixture, ContextManager)
             return fixture
@@ -351,6 +351,8 @@ class FixtureMeta(type):
 
     def __new__(cls, name, bases, namespace):
         klass = super(FixtureMeta, cls).__new__(cls, name, bases, namespace)
+        # if klass in klass._registry:
+        #     raise Exception('Duplicate fixture in registry: %s' % klass)
         klass._registry[klass] = klass
         return klass
 
@@ -420,11 +422,13 @@ class Fixture(object):
 
     @classmethod
     def provider(cls, name='default', **kwargs):
-        def decorator(obj):
+        def decorator(obj, name=name):
             for k, v in kwargs.items():
                 setattr(obj, k, v)
+            if name == 'default' and hasattr(obj, 'PROVIDER'):
+                name = obj.PROVIDER
             cls._providers.setdefault(cls, {})[name] = obj
-            obj.__provides__ = cls
+            obj.__fixture__ = cls
             return obj
         return decorator
 
@@ -434,6 +438,7 @@ class Fixture(object):
     def _get_providers(self, config):
         providers = self.providers
         if not hasattr(self, '__key__'):
+            # FIXME FIXME
             return providers.values()
         if hasattr(config, 'fixture_providers'):
             use_providers = config.fixture_providers.get(self.__key__)
@@ -452,3 +457,18 @@ class Fixture(object):
         return [
             self.providers[p] for p in providers
         ]
+
+
+def provider(name='default', __fixture__=None, **kwargs):
+    def decorator(obj, __fixture__=__fixture__):
+        if __fixture__ is None:
+            __fixture__ = obj.__fixture__
+        if isinstance(__fixture__, str):
+            __fixture__ = type(__fixture__, (Fixture,), {'__key__': __fixture__})
+        try:
+            obj.__fixture__ = __fixture__
+        except:
+            pass
+        decorate = __fixture__.provider(name=name, **kwargs)
+        return decorate(obj)
+    return decorator
