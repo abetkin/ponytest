@@ -1,5 +1,5 @@
 import click
-from ponytest import with_cli_args, class_property, pony_fixtures, fixture_providers as providers
+from ponytest import with_cli_args, class_property, Fixture
 
 import sys
 PY2 = sys.version_info[0] == 2
@@ -12,9 +12,9 @@ else:
 import unittest
 from functools import partial
 
-class Option(ContextDecorator):
-    __key__ = 'myfixture'
 
+
+class Option(ContextDecorator):
     def __init__(self, test, name):
         self.name = name
         self.test = test
@@ -26,6 +26,11 @@ class Option(ContextDecorator):
     __exit__ = lambda *args: None
 
 
+class F(Fixture):
+    providers = {
+        '1': partial(Option, name='1'),
+        '2': partial(Option, name='2'),
+    }
 
 
 
@@ -40,15 +45,7 @@ class TestMultiple(unittest.TestCase):
 
     output = []
 
-    fixture_providers = {
-        'myfixture': {
-            '1': partial(Option, name='1'),
-            '2': partial(Option, name='2'),
-
-        }
-    }
-
-    pony_fixtures = ['myfixture']
+    pony_fixtures = {'test': [F]}
 
     def test(self):
         self.output.append(self.option_value)

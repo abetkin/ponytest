@@ -6,12 +6,12 @@ from contextlib import contextmanager
 class F1(Fixture):
     __key__ = 'key1'
 
-    @Fixture.provider(__key__)
-    @contextmanager
-    def simplest(cls):
-        assert isinstance(cls, type)
-        cls.added_attribute = 'attr'
-        yield
+@F1.provider()
+@contextmanager
+def simplest(cls):
+    assert isinstance(cls, type)
+    cls.added_attribute = 'attr'
+    yield
 
 
 
@@ -21,7 +21,7 @@ if is_standalone_use():
 
     class Test1(TestCase):
 
-        pony_fixtures = {'class': [F1()]}
+        pony_fixtures = {'class': [F1]}
 
         def test(self):
             self.assertTrue(self.added_attribute)

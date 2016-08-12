@@ -4,7 +4,7 @@ from itertools import product, groupby
 from collections import deque, Iterable, Mapping, namedtuple
 
 from .utils import PY2, ContextManager, ValidationError, add_metaclass, no_op, \
-        merge_attrs, with_cli_args
+        merge_attrs, with_cli_args, class_property
 import click
 if not PY2:
     from contextlib import contextmanager, ExitStack, ContextDecorator
@@ -90,9 +90,24 @@ class CaseBuilder(object):
 
     def __init__(self, testcase_cls, fixtures, names, config):
         self.klass = testcase_cls
-        self.fixtures = fixtures
         self.names = names
         self.config = config
+
+        self.fixtures = fixtures
+        _setUp = testcase_cls.setUp
+        if PY2:
+            _setUp = _setUp.__func__
+        _tearDown = testcase_cls.tearDown
+        if PY2:
+            _tearDown = _tearDown.__func__
+        fixtures['test'] = tuple(fixtures['test']) + (
+            SetupTeardownFixture(_setUp, _tearDown),
+        )
+        _setUpClass = testcase_cls.setUpClass.__func__
+        _tearDownClass = testcase_cls.tearDownClass.__func__
+        fixtures['class'] = tuple(fixtures['class']) + (
+            SetupTeardownFixture(_setUpClass, _tearDownClass),
+        )
 
     @classmethod
     def factory(cls, testcase_cls, fixtures, names, config):
@@ -141,9 +156,8 @@ class ClassFixturesAreContextManagers(CaseBuilder):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = self._sorted(
-                    [F(test) for F in self.fixtures['test']]
-                )
+                fixtures = [F(test) for F in self._sorted(self.fixtures['test'])]
+
                 if not all(isinstance(f, ContextManager) for f in fixtures):
                     for wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
@@ -160,9 +174,7 @@ class ClassFixturesAreContextManagers(CaseBuilder):
 
         def setUpClass(cls, *arg, **kw):
             stack = stack_holder[0]
-            fixtures = self._sorted(
-                [Ctx(cls) for Ctx in self.fixtures['class']]
-            )
+            fixtures = [F(cls) for F in self._sorted(self.fixtures['class'])]
             with stack:
                 for ctx in fixtures:
                     stack.enter_context(ctx)
@@ -197,9 +209,7 @@ class ClassFixturesCanBeCallables(CaseBuilder):
                 [cls(name) for name in self.names]
             )
             s(result)
-        fixtures = self._sorted(
-            [F(testcase_cls) for F in self.fixtures['class']]
-        )
+        fixtures = [F(testcase_cls) for F in self._sorted(self.fixtures['class'])]
         if not all(isinstance(f, ContextManager) for f in fixtures):
             for wrapper in reversed(fixtures):
                 func = wrapper(func)
@@ -243,9 +253,7 @@ class ClassFixturesCanBeCallables(CaseBuilder):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = self._sorted(
-                    [F(test) for F in self.fixtures['test']]
-                )
+                fixtures = [F(test) for F in self._sorted(self.fixtures['test'])]
                 if not all(isinstance(f, ContextManager) for f in fixtures):
                     for wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
@@ -285,9 +293,8 @@ class FixtureManager(object):
                     if items:
                         yield [(scope, i) for i in items]
             provider_sets = tuple(provider_sets())
-
             for chain in product(*provider_sets):
-                chain = sorted(chain)
+                chain = sorted(chain, key=lambda i: i[0])
                 fixtures = {scope: () for scope in SCOPES}
                 for scope, items in groupby(chain, lambda f: f[0]):
                     fixtures[scope] = [i[1] for i in items]
@@ -296,6 +303,7 @@ class FixtureManager(object):
                         for scope, f in all_fixtures):
                     continue
                 yield names, fixtures, config
+
 
     def iter_fixtures(self, config):
         for scope in ['test', 'class']:
@@ -343,18 +351,19 @@ class FixtureMeta(type):
 
     def __new__(cls, name, bases, namespace):
         klass = super(FixtureMeta, cls).__new__(cls, name, bases, namespace)
-        if namespace.get('disable_FixtureMeta'):
-            return klass
-        key = namespace.get('__key__')
-        if key:
-            klass._registry[key] = klass
+        klass._registry[klass] = klass
         return klass
 
     def __hash__(cls):
-        return hash(cls.__key__)
+        try:
+            return hash(cls.__key__)
+        except AttributeError:
+            return super(FixtureMeta, cls).__hash__()
 
     def __eq__(cls, other):
         return hash(cls) == hash(other)
+
+# TODO make __key__ completely optional
 
 
 @add_metaclass(FixtureMeta)
@@ -362,10 +371,13 @@ class Fixture(object):
     disable_FixtureMeta = True
 
     _registry = {}
-    __key__ = None
+    # __key__ = None
 
     def handler(self, providers, **kwargs):
-        key = self.__key__
+        try:
+            key = self.__key__
+        except AttributeError:
+            return providers.values()
         formatted_key =  key.replace('_', '-')
         option = ''.join(('--', formatted_key))
         no_option = '-'.join(('--no', formatted_key))
@@ -407,12 +419,12 @@ class Fixture(object):
         return self._providers.setdefault(self.__key__, {})
 
     @classmethod
-    def provider(cls, key, name='default', **kwargs):
+    def provider(cls, name='default', **kwargs):
         def decorator(obj):
             for k, v in kwargs.items():
                 setattr(obj, k, v)
-            cls._providers.setdefault(key, {})[name] = obj
-            obj.__provides__ = key
+            cls._providers.setdefault(cls, {})[name] = obj
+            obj.__provides__ = cls
             return obj
         return decorator
 
@@ -421,6 +433,8 @@ class Fixture(object):
 
     def _get_providers(self, config):
         providers = self.providers
+        if not hasattr(self, '__key__'):
+            return providers.values()
         if hasattr(config, 'fixture_providers'):
             use_providers = config.fixture_providers.get(self.__key__)
             if use_providers:

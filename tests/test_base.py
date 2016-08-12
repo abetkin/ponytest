@@ -19,11 +19,11 @@ import collections
 class Simplest(Fixture):
     __key__ = 'simplest'
 
-    @Fixture.provider(__key__)
-    @contextmanager
-    def add_attr(cls):
-        cls.added_attribute = 'attr'
-        yield
+@Simplest.provider()
+@contextmanager
+def add_attr(cls):
+    cls.added_attribute = 'attr'
+    yield
 
 
 class TestCaseScoped(TestCase):
@@ -51,11 +51,11 @@ class TestCliNeg(TestCase):
     class Simplest(Fixture):
         __key__ = 'cli.simplest'
 
-        @Fixture.provider(__key__)
-        @contextmanager
-        def simplest(test):
-            test.output = ['item']
-            yield
+    @Simplest.provider()
+    @contextmanager
+    def simplest(test):
+        test.output = ['item']
+        yield
 
 
     @class_property
@@ -104,7 +104,7 @@ class TestExcludeFixtures(TestCase):
     class F(Fixture):
         __key__ = 'F'
 
-    @Fixture.provider('F')
+    @F.provider()
     def raises_exc(test):
         raise Exception
 
@@ -120,17 +120,17 @@ class TestLevelConfig(TestCase):
     class F(Fixture):
         __key__ = 'tlf'
 
-        @Fixture.provider(__key__, 'p1')
-        @contextmanager
-        def p1(test):
-            test.attr = 1
-            yield
+    @F.provider('p1')
+    @contextmanager
+    def p1(test):
+        test.attr = 1
+        yield
 
-        @Fixture.provider(__key__, 'p2')
-        @contextmanager
-        def p2(test):
-            test.attr = 2
-            yield
+    @F.provider('p2')
+    @contextmanager
+    def p2(test):
+        test.attr = 2
+        yield
 
     pony_fixtures = {'test': [F]}
     fixture_providers = {'tlf': ['p1']}

@@ -10,25 +10,27 @@ if PY2:
 else:
     from contextlib import contextmanager
 
-from ponytest import pony_fixtures, provider, TestCase
+from ponytest import pony_fixtures, Fixture, TestCase
 
 from collections import OrderedDict
 
-@provider('log', scope='class')
-@contextmanager
-def use_log(test):
-    print('start logging')
-    assert 0
-    yield
-    print('end logging')
+class Log(Fixture):
 
+    @contextmanager
+    def use_log(test):
+        print('start logging')
+        assert 0
+        yield
+        print('end logging')
+
+Log.providers = {Log: Log.use_log}
 
 
 import unittest
 
 class TestDebug(unittest.TestCase):
 
-    include_fixtures = ['log']
+    include_fixtures = {'class': [Log]}
 
     @classmethod
     def setUpClass(cls):
@@ -43,7 +45,7 @@ class TestDebug(unittest.TestCase):
 
 class NoIpdb(TestDebug):
 
-    include_fixtures = ['log']
+    include_fixtures = {'class': ['log']}
 
     fixture_providers = dict(
         ipdb_all = (), ipdb = (),
