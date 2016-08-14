@@ -4,7 +4,7 @@ from ponytest import TestCase, Fixture
 from contextlib import contextmanager
 
 class F1(Fixture):
-    __key__ = 'key1'
+    fixture_key = 'key1'
 
 @F1.provider()
 @contextmanager

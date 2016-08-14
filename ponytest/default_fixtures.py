@@ -17,7 +17,7 @@ else:
 
 
 class Ipdb(Fixture):
-    __key__ = 'ipdb'
+    fixture_key = 'ipdb'
 
 
 @Ipdb.provider()

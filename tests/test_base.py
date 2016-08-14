@@ -17,7 +17,7 @@ import collections
 
 
 class Simplest(Fixture):
-    __key__ = 'simplest'
+    fixture_key = 'simplest'
 
 @Simplest.provider()
 @contextmanager
@@ -49,7 +49,7 @@ class TestCliNeg(TestCase):
     output = ()
 
     class Simplest(Fixture):
-        __key__ = 'cli.simplest'
+        fixture_key = 'cli.simplest'
 
     @Simplest.provider()
     @contextmanager
@@ -102,7 +102,7 @@ class TestCliPos(TestCliNeg):
 class TestExcludeFixtures(TestCase):
 
     class F(Fixture):
-        __key__ = 'F'
+        fixture_key = 'F'
 
     @F.provider()
     def raises_exc(test):
@@ -118,7 +118,7 @@ class TestExcludeFixtures(TestCase):
 class TestLevelConfig(TestCase):
 
     class F(Fixture):
-        __key__ = 'tlf'
+        fixture_key = 'tlf'
 
     @F.provider('p1')
     @contextmanager

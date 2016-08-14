@@ -11,5 +11,3 @@ lazy fixtures: make concept better
 ipdb: wtf with the console output ?
 
 ----
-
-namespaces ? Fixture(ns)
