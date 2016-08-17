@@ -176,14 +176,14 @@ class CaseBuilder(object):
             if fixture.KEY not in getattr(config, 'class_scoped', ()) \
                     and  fixture.KEY in getattr(config, 'test_scoped', ()):
                 return False
-        return getattr(fixture, 'scope', 'test') == 'class'
+        return getattr(fixture, 'scope', 'class') == 'class'
 
     @staticmethod
     def _is_lazy(fixture, config):
         if hasattr(fixture, 'KEY'):
             if fixture.KEY in getattr(config, 'lazy_fixtures', ()):
                 return True
-        return getattr(fixture, 'scope', 'test') == 'lazy'
+        return getattr(fixture, 'scope', 'lazy') == 'lazy'
 
     @classmethod
     def _group_by_scope(cls, klass, fixtures, config):
