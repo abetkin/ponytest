@@ -304,7 +304,6 @@ class FixtureManager(object):
                     continue
                 yield names, fixtures, config
 
-
     def iter_fixtures(self, config):
         for scope in ['test', 'class']:
             config_fixtures = getattr(config, 'pony_fixtures', {})
@@ -403,6 +402,8 @@ class Fixture(object):
         @click.option(option, 'included', multiple=True)
         @click.option(no_option, 'excluded', multiple=True)
         def multiple_providers(included, excluded, providers=providers):
+            if included == ('ALL',):
+                return providers
             providers = {k: v for k, v in providers.items()
                         if not included or k in included
                         if not excluded or k not in excluded}
