@@ -373,10 +373,11 @@ class Fixture(object):
 
     _registry = {}
     # fixture_key = None
+    cli_key = None
 
     def handler(self, providers, **kwargs):
         try:
-            key = self.fixture_key
+            key = self.cli_key or self.fixture_key
         except AttributeError:
             return providers.values()
         formatted_key =  key.replace('_', '-')
@@ -467,6 +468,8 @@ class Fixture(object):
 
 def provider(name='default', fixture=None, **kwargs):
     def decorator(obj, fixture=fixture):
+        if name == 'log_all':
+            import ipdb; ipdb.set_trace()
         if fixture is None:
             fixture = obj.fixture
         if isinstance(fixture, str):

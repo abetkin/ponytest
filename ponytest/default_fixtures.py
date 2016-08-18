@@ -3,7 +3,7 @@ from __future__ import print_function
 import sys
 from collections import OrderedDict
 
-from .main import pony_fixtures, Fixture
+from .main import pony_fixtures, Fixture, provider
 from .utils import with_cli_args, PY2
 
 
@@ -16,15 +16,15 @@ else:
 
 
 
-class Ipdb(Fixture):
-    fixture_key = 'ipdb'
+# class Ipdb(Fixture):
+#     fixture_key = 'ipdb'
 
 
-@Ipdb.provider()
+@provider(fixture='ipdb')
 class IpdbProvider(object):
 
     enabled = False
-    weight = -10
+    weight = 10
 
     def __init__(self, Test):
         self.Test = Test
@@ -40,8 +40,21 @@ class IpdbProvider(object):
             post_mortem(tb)
 
 
+class IpdbClass(Fixture):
+    cli_key = 'ipdb'
+    fixture_key = 'ipdb_class'
+
+@IpdbClass.provider()
+class IpdbClassProvider(object):
+
+    weight = -10
+
+    def __new__(self, *args, **kw):
+        return IpdbProvider(*args, **kw)
+
+
 debugger_support = {
-    'test': ['ipdb'], 'class': ['ipdb']
+    'test': ['ipdb'], 'class': ['ipdb_class']
 }
 
 
