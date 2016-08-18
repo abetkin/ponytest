@@ -12,7 +12,7 @@ else:
 from ponytest import Fixture
 
 class F(Fixture):
-    __key__ = 'providers.F'
+    fixture_key = 'providers.F'
 
 class Option(ContextDecorator):
 

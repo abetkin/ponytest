@@ -1,0 +1,13 @@
+
+
+--db sqlite,postgres --ipdb --log
+
+------
+
+lazy fixtures: make concept better
+
+---------
+
+ipdb: wtf with the console output ?
+
+----
