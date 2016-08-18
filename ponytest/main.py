@@ -11,7 +11,7 @@ if not PY2:
 else:
     from contextlib2 import contextmanager, ExitStack, ContextDecorator
 
-from .config import pony_fixtures
+from .config import pony_fixtures #, fixture_providers
 
 
 import unittest
@@ -382,6 +382,7 @@ class Fixture(object):
         formatted_key =  key.replace('_', '-')
         option = ''.join(('--', formatted_key))
         no_option = '-'.join(('--no', formatted_key))
+
         if len(providers) == 1:
             @with_cli_args
             @click.option(option, 'enabled', is_flag=True)
@@ -404,9 +405,11 @@ class Fixture(object):
         def multiple_providers(included, excluded, providers=providers):
             if included == ('ALL',):
                 return providers
+            included = [s.replace('-', '_') for s in included]
+            excluded = [s.replace('-', '_') for s in excluded]
             providers = {k: v for k, v in providers.items()
-                        if not included or k in included
-                        if not excluded or k not in excluded}
+                         if not included or k in included
+                         if not excluded or k not in excluded}
             if included or excluded:
                 return providers
             return (key for key, p in providers.items()
@@ -441,13 +444,15 @@ class Fixture(object):
         if not hasattr(self, 'fixture_key'):
             # FIXME
             return providers.values()
-        if hasattr(config, 'fixture_providers'):
+        use_providers = hasattr(config, 'fixture_providers')
+        if use_providers:
             use_providers = config.fixture_providers.get(self.fixture_key)
-            if use_providers:
-                providers = {
-                    k: v for k, v in self.providers.items()
-                    if k in use_providers
-                }
+        if use_providers:
+            providers = {
+                k: v for k, v in self.providers.items()
+                if k in use_providers
+            }
+            return [self.providers[p] for p in providers]
         if hasattr(config, 'fixture_handlers') and config.fixture_handlers.get(self.fixture_key):
             handler = config.fixture_handlers[self.fixture_key]
         else:

@@ -11,3 +11,9 @@ lazy fixtures: make concept better
 ipdb: wtf with the console output ?
 
 ----
+
+display fixture_name when len(providers) > 1
+
+----
+
+fixture collections as keys ?

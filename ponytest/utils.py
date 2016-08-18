@@ -87,7 +87,7 @@ def no_op(*args):
 class merge_attrs(object):
     def __init__(self, *objects):
         self.objects = objects
-    
+
     def __getattr__(self, key):
         for obj in self.objects:
             try:
@@ -95,3 +95,16 @@ class merge_attrs(object):
             except AttributeError:
                 pass
         raise AttributeError
+
+
+class merge_dicts(object):
+    def __init__(self, *objects):
+        self.objects = objects
+
+    def __getitem__(self, key):
+        for obj in self.objects:
+            try:
+                return obj[key]
+            except KeyError:
+                pass
+        raise KeyError
