@@ -11,7 +11,7 @@ if not PY2:
 else:
     from contextlib2 import contextmanager, ExitStack, ContextDecorator
 
-from .config import fixture_providers, fixture_handlers, pony_fixtures, provider_validators
+from .config import pony_fixtures
 
 
 import unittest
