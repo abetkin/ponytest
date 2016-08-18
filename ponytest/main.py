@@ -48,6 +48,15 @@ class LazyFixture(object):
         return get_fixture
 
 
+class GetContext(object):
+    def __get__(self, Test, test):
+        def get_context(name):
+            if test and name in test._contexts:
+                return test._contexts[name]
+            return Test._contexts[name]
+        return get_context
+
+
 class Meta(type):
 
     def __new__(cls, name, bases, namespace):
@@ -71,27 +80,28 @@ class Meta(type):
     def __init__(cls, name, bases, namespace):
         if namespace.get('disable_Meta'):
             return
-        if not hasattr(cls, 'with_fixtures'):
-            cls.with_fixtures = []
+        # if not hasattr(cls, 'provider_names'):
+        #     cls.provider_names = []
 
 @add_metaclass(Meta)
 class TestCase(unittest.TestCase):
 
     disable_Meta = True
 
-    def __str__(self):
-        return ' '.join([
-            unittest.TestCase.__str__(self),
-            '[%s]' % ', '.join(self.with_fixtures),
-        ])
+    # def __str__(self):
+    #     return ' '.join([
+    #         unittest.TestCase.__str__(self),
+    #         '[%s]' % ', '.join(self.provider_names),
+    #     ])
 
 
 class CaseBuilder(object):
 
-    def __init__(self, testcase_cls, fixtures, names, config):
+    def __init__(self, testcase_cls, fixtures, names, config, fixture_names):
         self.klass = testcase_cls
         self.names = names
         self.config = config
+        self.fixture_names = fixture_names
 
         self.fixtures = fixtures
         _setUp = testcase_cls.setUp
@@ -110,14 +120,14 @@ class CaseBuilder(object):
         )
 
     @classmethod
-    def factory(cls, testcase_cls, fixtures, names, config):
+    def factory(cls, testcase_cls, fixtures, *args, **kw):
         for F in fixtures['class']:
             if not isinstance(F(testcase_cls), ContextManager):
                 builder = ClassFixturesCanBeCallables
                 break
         else:
             builder = ClassFixturesAreContextManagers
-        return builder(testcase_cls, fixtures, names, config)
+        return builder(testcase_cls, fixtures, *args, **kw)
 
     def prepare_case(self):
         '''
@@ -131,19 +141,19 @@ class CaseBuilder(object):
         '''
         raise NotImplementedError
 
-    @property
-    def fixture_names(self):
-        ret = []
-        for scope in ['class', 'test']:
-            for f in self.fixtures[scope]:
-                if getattr(f, 'fixture_name', None):
-                    ret.append(f.fixture_name)
-        return ret
-
     @staticmethod
     def _sorted(fixtures):
         return sorted(fixtures, key=lambda f: getattr(f, 'weight', 0))
 
+    def test_to_str(self, test):
+        def providers():
+            for p in self.fixtures['class'] + self.fixtures['test']:
+                if getattr(p, 'fixture', None) in self.fixture_names:
+                    yield p.provider_key
+        return ' '.join([
+            unittest.TestCase.__str__(test),
+            '[%s]' % ', '.join(providers()),
+        ])
 
 class ClassFixturesAreContextManagers(CaseBuilder):
 
@@ -156,16 +166,17 @@ class ClassFixturesAreContextManagers(CaseBuilder):
                 func = func.__func__
             @wraps(func)
             def wrapper(test, _test_func=func):
-                fixtures = [F(test) for F in self._sorted(self.fixtures['test'])]
-
-                if not all(isinstance(f, ContextManager) for f in fixtures):
-                    for wrapper in reversed(fixtures):
+                fixtures = [(getattr(F, 'fixture', None), F(test))
+                            for F in self._sorted(self.fixtures['test'])]
+                if not all(isinstance(f, ContextManager) for _, f in fixtures):
+                    for _, wrapper in reversed(fixtures):
                         _test_func = wrapper(_test_func)
                     _test_func(test)
                     return
+                test._contexts = {}
                 with ExitStack() as stack:
-                    for ctx in fixtures:
-                        stack.enter_context(ctx)
+                    for name, p in fixtures:
+                        test._contexts[name] = stack.enter_context(p)
                     _test_func(test)
 
             dic[name] = wrapper
@@ -174,10 +185,12 @@ class ClassFixturesAreContextManagers(CaseBuilder):
 
         def setUpClass(cls, *arg, **kw):
             stack = stack_holder[0]
-            fixtures = [F(cls) for F in self._sorted(self.fixtures['class'])]
+            fixtures = [(getattr(F, 'fixture', None), F(cls))
+                        for F in self._sorted(self.fixtures['class'])]
+            cls._contexts = {}
             with stack:
-                for ctx in fixtures:
-                    stack.enter_context(ctx)
+                for name, p in fixtures:
+                    cls._contexts[name] = stack.enter_context(p)
                 stack_holder[0] = stack.pop_all()
         dic['setUpClass'] = classmethod(setUpClass)
 
@@ -186,9 +199,11 @@ class ClassFixturesAreContextManagers(CaseBuilder):
             with stack:
                 pass
         dic['tearDownClass'] = classmethod(tearDownClass)
+
         dic.update({
-            'with_fixtures': self.fixture_names,
+            '__str__': lambda test: self.test_to_str(test),
             'get_fixture': LazyFixture(self.fixtures['lazy']),
+            'get_context': GetContext(),
             'setUp': no_op, 'tearDown': no_op,
         })
         return dic
@@ -242,7 +257,7 @@ class ClassFixturesCanBeCallables(CaseBuilder):
     def prepare_case(self):
         dic = {
             'get_fixture': LazyFixture(self.fixtures['lazy']),
-            'with_fixtures': self.fixture_names,
+            '__str__': lambda test: self.test_to_str(test),
             'setUp': no_op, 'tearDown': no_op,
             'setUpClass': classmethod(no_op), 'tearDownClass': classmethod(no_op),
         }
@@ -287,10 +302,13 @@ class FixtureManager(object):
         configs = list(self.iter_test_configs())
         for names, config in configs:
             all_fixtures = tuple(self.iter_fixtures(config))
+            fixture_names = []
             def provider_sets():
                 for scope, f in all_fixtures:
                     items = f._get_providers(config)
                     if items:
+                        if len(items) > 1 and hasattr(f, 'fixture_key'):
+                            fixture_names.append(f.fixture_key)
                         yield [(scope, i) for i in items]
             provider_sets = tuple(provider_sets())
             for chain in product(*provider_sets):
@@ -302,7 +320,7 @@ class FixtureManager(object):
                 if not all(f.validate_fixtures(fixtures, config)
                         for scope, f in all_fixtures):
                     continue
-                yield names, fixtures, config
+                yield names, fixtures, config, fixture_names
 
     def iter_fixtures(self, config):
         for scope in ['test', 'class']:
@@ -432,6 +450,8 @@ class Fixture(object):
                 setattr(obj, k, v)
             if name == 'default' and hasattr(obj, 'provider_key'):
                 name = obj.provider_key
+            else:
+                obj.provider_key = name
             cls._providers.setdefault(cls, {})[name] = obj
             obj.fixture = cls
             return obj
