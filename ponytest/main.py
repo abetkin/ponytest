@@ -464,7 +464,8 @@ def provider(name='default', fixture=None, **kwargs):
         if fixture is None:
             fixture = obj.fixture
         if isinstance(fixture, str):
-            fixture = type(fixture, (Fixture,), {'fixture_key': fixture})
+            fixture = Fixture._registry.get(fixture) \
+                or type(fixture, (Fixture,), {'fixture_key': fixture})
         try:
             obj.fixture = fixture
         except:
