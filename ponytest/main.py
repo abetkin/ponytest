@@ -307,7 +307,7 @@ class FixtureManager(object):
                 for scope, f in all_fixtures:
                     items = f._get_providers(config)
                     if items:
-                        if len(items) > 1 and hasattr(f, 'fixture_key'):
+                        if len(f.providers) > 1 and hasattr(f, 'fixture_key'):
                             fixture_names.append(f.fixture_key)
                         yield [(scope, i) for i in items]
             provider_sets = tuple(provider_sets())
@@ -488,8 +488,6 @@ class Fixture(object):
 
 def provider(name='default', fixture=None, **kwargs):
     def decorator(obj, fixture=fixture):
-        if name == 'log_all':
-            import ipdb; ipdb.set_trace()
         if fixture is None:
             fixture = obj.fixture
         if isinstance(fixture, str):
