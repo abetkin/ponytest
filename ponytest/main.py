@@ -68,11 +68,11 @@ class Meta(type):
         names = unittest.loader.TestLoader().getTestCaseNames(klass)
         mgr = FixtureManager(klass, names, test_level_config=False)
         mgr = list(mgr)
-        names, fixtures, config = mgr[0]
+        names, fixtures, config, fixture_names = mgr[0]
         # if not fixture_chains:
         #     return klass
 
-        builder = ClassFixturesAreContextManagers(klass, fixtures, names, config)
+        builder = ClassFixturesAreContextManagers(klass, fixtures, names, config, fixture_names)
         dic = builder.prepare_case()
         namespace.update(dic)
         return super(Meta, cls).__new__(cls, name, bases, namespace)
@@ -316,7 +316,6 @@ class FixtureManager(object):
                 fixtures = {scope: () for scope in SCOPES}
                 for scope, items in groupby(chain, lambda f: f[0]):
                     fixtures[scope] = [i[1] for i in items]
-
                 if not all(f.validate_fixtures(fixtures, config)
                         for scope, f in all_fixtures):
                     continue
