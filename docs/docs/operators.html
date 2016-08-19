@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Operators</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Operators" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/docs/operators.html">
+    
+    <meta property='og:type' content='website'>
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+           class="active" >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  
+    <section>
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/getting-started.html#_">
+              Example
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+    <section>
+      <h3>User Guide</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/new-project.html#_">
+              Some section
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Operators</h1>
+    <p></p>
+
+    <p>Most of JavaScript’s operators are heavily overloaded, and involve various 
+implicit conversions. Flow supports common uses of these operators, while 
+banning others that are common causes of errors.</p>
+
+<p>Some of the interesting restrictions that Flow imposes are:</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">+</code> either takes two <code class="highlighter-rouge">number</code>s and gives back a <code class="highlighter-rouge">number</code>, or takes a <code class="highlighter-rouge">string</code>
+and anything else and gives back a <code class="highlighter-rouge">string</code>. In addition, JavaScript specifies 
+some implicit conversions that happen as part of this operation (e.g., <code class="highlighter-rouge">Date</code> objects and 
+<code class="highlighter-rouge">boolean</code>s may be converted to <code class="highlighter-rouge">number</code>s), which Flow understands.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">==</code> and <code class="highlighter-rouge">!=</code> take either two values of the same base type (modulo subtyping 
+with <code class="highlighter-rouge">mixed</code>, <code class="highlighter-rouge">void</code>, and <code class="highlighter-rouge">any</code>), or two values of non-base types, and give 
+back a <code class="highlighter-rouge">boolean</code>. Specifically, these operators cannot compare two values of 
+incompatible base types, or a value of a base type with a value of non-base 
+type. JavaScript specifies an elaborate sequence of implicit conversions to 
+base types in these cases, which may cause weird errors. The alternative is to 
+use <code class="highlighter-rouge">===</code> and <code class="highlighter-rouge">!==</code> instead, which perform direct checks without implicit 
+conversions. The only exception to this rule is that <code class="highlighter-rouge">null</code> and <code class="highlighter-rouge">undefined</code>
+should be compared to other types with <code class="highlighter-rouge">==</code> and <code class="highlighter-rouge">!=</code>, instead of <code class="highlighter-rouge">===</code> and <code class="highlighter-rouge">!==</code>,
+since the non-strict equality considers <code class="highlighter-rouge">null</code> and <code class="highlighter-rouge">undefined</code> to be the same,
+and distinct from all other values. Such checks are therefore useful to 
+narrow down maybe types.</p>
+  </li>
+</ul>
+
+
+    <p class="docs-prevnext">
+      
+      
+    </p>
+
+
+    <a id="_"></a>
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

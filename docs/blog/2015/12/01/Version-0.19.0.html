@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Version 0.19.0</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Version 0.19.0" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/blog/2015/12/01/Version-0.19.0.html">
+    
+    <meta property='og:type' content='article'>
+    <meta property='article:author' content="">
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+          >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  <section>
+    <h3>Recent Releases</h3>
+    <ul>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.30.0">
+            v0.30.0
+          </a>
+          <small>(July 29, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.29.0">
+            v0.29.0
+          </a>
+          <small>(July 14, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.28.0">
+            v0.28.0
+          </a>
+          <small>(July  5, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.27.0">
+            v0.27.0
+          </a>
+          <small>(June 10, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.26.0">
+            v0.26.0
+          </a>
+          <small>(May 27, 2016)</small>
+        </li>
+      
+      <li>
+        <a href="https://github.com/facebook/flow/releases">
+          All releases...
+        </a>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h3>Recent Posts</h3>
+    <ul>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/08/01/Windows-Support.html">
+            Windows Support
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/07/01/New-Unions-Intersections.html">
+            New Unions and Intersections
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/02/02/Version-0.21.0.html">
+            Version 0.21.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+             class="active" 
+            href="/blog/2015/12/01/Version-0.19.0.html">
+            Version 0.19.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/11/09/Generators.html">
+            Generators
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/10/07/Version-0.17.0.html">
+            Version 0.17.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/22/Version-0.16.0.html">
+            Version 0.16.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/10/Version-0.15.0.html">
+            Version 0.15.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/29/Version-0.14.0.html">
+            Version 0.14.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/03/Disjoint-Unions.html">
+            Disjoint Unions
+            
+          </a>
+        </li>
+      
+      <li><a
+        
+        href="/blog/all.html">All posts...</a></li>
+    </ul>
+  <section>
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Version 0.19.0</h1>
+    <p class="meta">December  1, 2015 by </p>
+
+    <p>Flow v0.19.0 was deployed today! It has a ton of changes, which the <a href="https://github.com/facebook/flow/blob/master/Changelog.md#v0190">Changelog</a> summarizes. The Changelog can be a little concise, though, so here are some longer explanations for some of the changes. Hope this helps!</p>
+
+<h2>@noflow<a id="noflow" class="hashref"></a><a href="#noflow" class="hash">#</a></h2>
+
+<p>Flow is opt-in by default (you add <code class="highlighter-rouge">@flow</code> to a file). However we noticed that sometimes people would add Flow annotations to files that were missing <code class="highlighter-rouge">@flow</code>. Often, these people didn’t notice that the file was being ignored by Flow. So we decided to stop allowing Flow syntax in non-Flow files. This is easily fixed by adding either <code class="highlighter-rouge">@flow</code> or <code class="highlighter-rouge">@noflow</code> to your file. The former will make the file a Flow file. The latter will tell Flow to completely ignore the file.</p>
+
+<h2>Declaration files<a id="declaration-files" class="hashref"></a><a href="#declaration-files" class="hash">#</a></h2>
+
+<p>Files that end with <code class="highlighter-rouge">.flow</code> are now treated specially. They are the preferred provider of modules. That is if both <code class="highlighter-rouge">foo.js</code> and <code class="highlighter-rouge">foo.js.flow</code> exist, then when you write <code class="highlighter-rouge">import Foo from './foo'</code>, Flow will use the type exported from <code class="highlighter-rouge">foo.js.flow</code> rather than <code class="highlighter-rouge">foo.js</code>.</p>
+
+<p>We imagine two main ways people will use <code class="highlighter-rouge">.flow</code> files.</p>
+
+<!--truncate-->
+
+<ol>
+  <li>
+    <p>As interface files. Maybe you have some library <code class="highlighter-rouge">coolLibrary.js</code> that is really hard to type with inline Flow types. You could put <code class="highlighter-rouge">coolLibrary.js.flow</code> next to it and declare the types that <code class="highlighter-rouge">coolLibrary.js</code> exports.</p>
+
+    <p><code class="highlighter-rouge">JavaScript
+// coolLibrary.js.flow
+declare export var coolVar: number;
+declare export function coolFunction(): void;
+declare export class coolClass {}
+</code></p>
+  </li>
+  <li>
+    <p>As the original source. Maybe you want to ship the minified, transformed version of <code class="highlighter-rouge">awesomeLibrary.js</code>, but people who use <code class="highlighter-rouge">awesomeLibrary.js</code> also use Flow. Well you could do something like</p>
+
+    <p><code class="highlighter-rouge">Bash
+cp awesomeLibraryOriginalCode.js awesomeLibrary.js.flow
+babel awesomeLibraryOriginalCode --out-file awesomeLibrary.js
+</code></p>
+  </li>
+</ol>
+
+<h2>Order of precedence for lib files<a id="order-of-precedence-for-lib-files" class="hashref"></a><a href="#order-of-precedence-for-lib-files" class="hash">#</a></h2>
+
+<p>Now your local lib files will override the builtin lib files. Is one of the builtin flow libs wrong? Send a pull request! But then while you’re waiting for the next release, you can use your own definition! The order of precedence is as follows:</p>
+
+<ol>
+  <li>Any paths supplied on the command line via –lib</li>
+  <li>The files found in the paths specified in the .flowconfig <code class="highlighter-rouge">[libs]</code> (in listing order)</li>
+  <li>The Flow core library files</li>
+</ol>
+
+<p>For example, if I want to override the builtin definition of Array and instead use my own version, I could update my <code class="highlighter-rouge">.flowconfig</code> to contain</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>// .flowconfig
+[libs]
+myArray.js
+</code></pre>
+</div>
+
+<pre><code class="language-JavaScript">// myArray.js
+declare class Array&lt;T&gt; {
+  // Put whatever you like in here!
+}
+</code></pre>
+
+<h2>Deferred initialization<a id="deferred-initialization" class="hashref"></a><a href="#deferred-initialization" class="hash">#</a></h2>
+<p>Previously the following code was an error, because the initialization of <code class="highlighter-rouge">myString</code> happens later. Now Flow is fine with it.</p>
+
+<pre><code class="language-JavaScript">function foo(someFlag: boolean): string {
+  var myString:string;
+  if (someFlag) {
+    myString = "yup";
+  } else {
+    myString = "nope";
+  }
+  return myString;
+}
+</code></pre>
+
+
+    <a 
+  href="https://twitter.com/share" 
+  class="twitter-share-button" 
+  data-url="http://flowtype.org/blog/2015/12/01/Version-0.19.0.html" 
+  data-text="Flow | Version 0.19.0" 
+  data-hashtags="flowtype">Tweet</a>
+<div 
+  class="fb-like" 
+  data-href="http://flowtype.org/blog/2015/12/01/Version-0.19.0.html" 
+  data-layout="standard" 
+  data-action="like"
+  data-show-faces="true"
+  data-share="true"></div>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Dynamic Type Tests</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Dynamic Type Tests" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/docs/dynamic-type-tests.html">
+    
+    <meta property='og:type' content='website'>
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+           class="active" >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  
+    <section>
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/getting-started.html#_">
+              Example
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+    <section>
+      <h3>User Guide</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/new-project.html#_">
+              Some section
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Dynamic Type Tests</h1>
+    <p></p>
+
+    
+<p>Flow understands many idiomatic constructs used to determine the type of a
+value at runtime, and incorporates that knowledge into its static analysis.</p>
+
+<p>There are several dynamic type tests (predicates) on local variables that Flow
+recognizes and uses to refine types. Refining a type with a predicate means
+narrowing the original type with the type satisfied by values satisfying the
+predicate.</p>
+
+<p>Type tests can occur in <code class="highlighter-rouge">if</code> and <code class="highlighter-rouge">switch</code> statements, the test block in loop
+constructs like <code class="highlighter-rouge">for</code>, <code class="highlighter-rouge">for-in</code>, <code class="highlighter-rouge">for-of</code>, and <code class="highlighter-rouge">do-while</code>, conditional
+expressions (ternary statements), and inline logical expressions like <code class="highlighter-rouge">a &amp;&amp;
+a.b</code>.</p>
+
+<h3>Maybe, Null, and Undefined<a id="maybe-null-and-undefined" class="hashref"></a><a href="#maybe-null-and-undefined" class="hash">#</a></h3>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">maybe_test</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E1" data-message-id="M1003"><span class="error" data-error-id="E2" data-message-id="M2003"><span class="type T_STRING_TYPE">string</span></span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span> <span class="normal T_EQUAL">==</span> <span class="normal T_NULL">null</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// The condition will pass if `x` is `null` or `undefined`.</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E1" data-message-id="M1001"><span class="error" data-error-id="E2" data-message-id="M2001"><span class="normal T_IDENTIFIER">x</span></span></span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// In this branch, `x` must be a string.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">null_undefined_tests</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E3" data-message-id="M3003"><span class="error" data-error-id="E4" data-message-id="M4003"><span class="type T_STRING_TYPE">string</span></span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_NULL">null</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// The condition will pass if `x` is `null`.</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E3" data-message-id="M3001"><span class="normal T_IDENTIFIER">x</span></span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_IDENTIFIER">undefined</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// The condition will pass if `x` is `undefined`.</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E4" data-message-id="M4001"><span class="normal T_IDENTIFIER">x</span></span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// In this branch, `x` must be a string.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>4:     return <strong>x</strong>;
+              ^ null. This type is incompatible with the expected return type of
+1: function maybe_test(x: ?string): <strong>string</strong> {
+                                    ^^^^^^ string
+
+4:     return <strong>x</strong>;
+              ^ undefined. This type is incompatible with the expected return type of
+1: function maybe_test(x: ?string): <strong>string</strong> {
+                                    ^^^^^^ string
+
+14:     return <strong>x</strong>;
+               ^ null. This type is incompatible with the expected return type of
+11: function null_undefined_tests(x: ?string): <strong>string</strong> {
+                                               ^^^^^^ string
+
+17:     return <strong>x</strong>;
+               ^ undefined. This type is incompatible with the expected return type of
+11: function null_undefined_tests(x: ?string): <strong>string</strong> {
+                                               ^^^^^^ string</code></pre>
+</div>
+
+
+</div>
+
+<p>Read more about <a href="/docs/nullable-types.html">Maybe Types</a>.</p>
+
+<h3>Truthiness and Existence<a id="truthiness-and-existence" class="hashref"></a><a href="#truthiness-and-existence" class="hash">#</a></h3>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">boolean_truthiness</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_BOOLEAN_TYPE">boolean</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_TRUE">true</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// In this branch, `x` must be `true`.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// Flow understands that `x` must be `false` in this branch, and therefore</span>
+    <span class="comment line">// that the expression !x must be `true`.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_NOT">!</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">string_truthiness</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E5" data-message-id="M5003"><span class="type T_STRING">&quot;&quot;</span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// Flow understands that `x` can be any non-empty string in this branch.</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E5" data-message-id="M5001"><span class="normal T_IDENTIFIER">x</span></span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// Flow understands that `x` can only be &quot;&quot; in this branch.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">number_truthiness</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E6" data-message-id="M6003"><span class="type T_NUMBER_SINGLETON_TYPE">0</span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// Flow understands that `x` can be any non-zero number in this branch.</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E6" data-message-id="M6001"><span class="normal T_IDENTIFIER">x</span></span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// Flow understands that `x` can only be 0 in this branch.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">sketchy_null_check</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="normal T_LCURLY">{</span>
+  <span class="comment line">// Since &quot;&quot; is not truthy, we will replace &quot;&quot; with &quot;default&quot; in this function.</span>
+  <span class="comment line">// Currently Flow does not complain about this pattern, but it&#39;s a common</span>
+  <span class="comment line">// request which may be added in the future.</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_STRING">&quot;default&quot;</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>15:     return <strong>x</strong>;
+               ^ string. Expected string literal ``
+12: function string_truthiness(x: string): <strong>&quot;&quot;</strong> {
+                                           ^^ string literal ``
+
+25:     return <strong>x</strong>;
+               ^ number. Expected number literal `0`
+22: function number_truthiness(x: number): <strong>0</strong> {
+                                           ^ number literal `0`</code></pre>
+</div>
+
+
+</div>
+
+<h3><code class="highlighter-rouge">typeof</code><a id="typeof" class="hashref"></a><a href="#typeof" class="hash">#</a></h3>
+
+<p>This type test is particularly useful in conjunction with <a href="/docs/union-intersection-types.html">union types</a>.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">typeof_test</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span> <span class="type T_BIT_OR">|</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;string&quot;</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// In this branch, `x` must be a string, and thus has a `length` method.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">length</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// By deduction, `x` must be a number in this branch.</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<p>In JavaScript, <code class="highlighter-rouge">typeof null</code> is <code class="highlighter-rouge">"object"</code>, but don’t worry, Flow won’t let
+you make that common mistake. (Hint: use <code class="highlighter-rouge">x == null</code> instead.)</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">typeof_null</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_IDENTIFIER">Object</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E7" data-message-id="M7003"><span class="type T_IDENTIFIER">Object</span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;object&quot;</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E7" data-message-id="M7001"><span class="normal T_IDENTIFIER">x</span></span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// x can still be null</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>3:     return <strong>x</strong>; // x can still be null
+              ^ null. This type is incompatible with the expected return type of
+1: function typeof_null(x: ?Object): <strong>Object</strong> {
+                                     ^^^^^^ object type</code></pre>
+</div>
+
+
+</div>
+
+<h3>Array.isArray<a id="arrayisarray" class="hashref"></a><a href="#arrayisarray" class="hash">#</a></h3>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">NestedArray</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">T</span><span class="type T_GREATER_THAN">&gt;</span> <span class="type T_ASSIGN">=</span> <span class="type T_IDENTIFIER">Array</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">T</span><span class="type T_BIT_OR">|</span><span class="type T_IDENTIFIER">NestedArray</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">T</span><span class="type T_GREATER_THAN">&gt;</span><span class="type T_GREATER_THAN">&gt;</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">flatten</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">T</span><span class="type T_GREATER_THAN">&gt;</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">xs</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">NestedArray</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">T</span><span class="type T_GREATER_THAN">&gt;</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Array</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">T</span><span class="type T_GREATER_THAN">&gt;</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_LET">let</span> <span class="normal T_IDENTIFIER">result</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_LBRACKET">[</span><span class="normal T_RBRACKET">]</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_FOR">for</span> <span class="normal T_LPAREN">(</span><span class="normal T_LET">let</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_OF">of</span> <span class="normal T_IDENTIFIER">xs</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">Array</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">isArray</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+      <span class="comment line">// In this branch, `x` must be a `NestedArray&lt;T&gt;`</span>
+      <span class="normal T_IDENTIFIER">result</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">push</span><span class="normal T_LPAREN">(</span><span class="normal T_ELLIPSIS">...</span><span class="normal T_IDENTIFIER">flatten</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+      <span class="comment line">// By deduction, `x` must be a `T` in this branch.</span>
+      <span class="normal T_IDENTIFIER">result</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">push</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RCURLY">}</span>
+  <span class="normal T_RCURLY">}</span>
+  <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">result</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<h3>A instanceof B<a id="a-instanceof-b" class="hashref"></a><a href="#a-instanceof-b" class="hash">#</a></h3>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_DECLARE">declare</span> <span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">businessLogic</span><span class="type T_LPAREN">(</span><span class="type T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="type T_RPAREN">)</span><span class="normal T_COLON">:</span> <span class="type T_VOID_TYPE">void</span><span class="normal T_SEMICOLON">;</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">myEventHandler</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">e</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Event</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="comment line">// We only know that e.target is an EventTarget</span>
+  <span class="error" data-error-id="E8" data-message-id="M8003"><span class="normal T_IDENTIFIER">e</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">target</span></span><span class="normal T_PERIOD">.</span><span class="error" data-error-id="E8" data-message-id="M8001"><span class="normal T_IDENTIFIER">value</span></span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">e</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">target</span> <span class="normal T_INSTANCEOF">instanceof</span> <span class="normal T_IDENTIFIER">HTMLInputElement</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// Now we know it&#39;s an &lt;input /&gt;, with a `value` property.</span>
+    <span class="normal T_IDENTIFIER">businessLogic</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">e</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">target</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">value</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="comment line">// error handling</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>5:   e.target.<strong>value</strong>;
+              ^^^^^ property `value`. Property not found in
+5:   <strong>e.target</strong>.value;
+     ^^^^^^^^ EventTarget</code></pre>
+</div>
+
+
+</div>
+
+<h3>Tagged Unions<a id="tagged-unions" class="hashref"></a><a href="#tagged-unions" class="hash">#</a></h3>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">BinaryTree</span> <span class="type T_ASSIGN">=</span>
+  <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">kind</span><span class="type T_COLON">:</span> <span class="type T_STRING">&quot;leaf&quot;</span><span class="type T_COMMA">,</span> <span class="normal T_IDENTIFIER">value</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span> <span class="type T_RCURLY">}</span> <span class="type T_BIT_OR">|</span>
+  <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">kind</span><span class="type T_COLON">:</span> <span class="type T_STRING">&quot;branch&quot;</span><span class="type T_COMMA">,</span> <span class="normal T_IDENTIFIER">left</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">BinaryTree</span><span class="type T_COMMA">,</span> <span class="normal T_IDENTIFIER">right</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">BinaryTree</span> <span class="type T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">sumLeaves</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">tree</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">BinaryTree</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">tree</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">kind</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;leaf&quot;</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">tree</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">value</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">sumLeaves</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">tree</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">left</span><span class="normal T_RPAREN">)</span> <span class="normal T_PLUS">+</span> <span class="normal T_IDENTIFIER">sumLeaves</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">tree</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">right</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<h2>Caveats<a id="caveats" class="hashref"></a><a href="#caveats" class="hash">#</a></h2>
+
+<p>Flow is pessimistic about refinements. If it is possible that a refinement may
+become invalid, Flow will throw away the refinement. This can often happen
+when invoking a function that might refer to the refined value.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_DECLARE">declare</span> <span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">something</span><span class="type T_LPAREN">(</span><span class="type T_RPAREN">)</span><span class="normal T_COLON">:</span> <span class="type T_VOID_TYPE">void</span><span class="normal T_SEMICOLON">;</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">foo</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">y</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span> <span class="type T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E9" data-message-id="M9003"><span class="error" data-error-id="E10" data-message-id="M10003"><span class="type T_STRING_TYPE">string</span></span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">y</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_IDENTIFIER">something</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E9" data-message-id="M9001"><span class="error" data-error-id="E10" data-message-id="M10001"><span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">y</span></span></span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// error: x.y may be null/undefined</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_STRING">&quot;default&quot;</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>6:     return <strong>x.y</strong>; // error: x.y may be null/undefined
+              ^^^ null. This type is incompatible with the expected return type of
+3: function foo(x: { y: ?string }): <strong>string</strong> {
+                                    ^^^^^^ string
+
+6:     return <strong>x.y</strong>; // error: x.y may be null/undefined
+              ^^^ undefined. This type is incompatible with the expected return type of
+3: function foo(x: { y: ?string }): <strong>string</strong> {
+                                    ^^^^^^ string</code></pre>
+</div>
+
+
+</div>
+
+<p>In the above code, <code class="highlighter-rouge">something</code> might mutate <code class="highlighter-rouge">x</code>, invalidating the refinement.
+It is unsafe to expect that <code class="highlighter-rouge">x.y</code> will always be a string after calling this
+function. It is simple to work around this, however. You can copy the object’s
+property value to a local variable, which can’t be mutated from the outside.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_DECLARE">declare</span> <span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">something</span><span class="type T_LPAREN">(</span><span class="type T_RPAREN">)</span><span class="normal T_COLON">:</span> <span class="type T_VOID_TYPE">void</span><span class="normal T_SEMICOLON">;</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">foo</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">y</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span> <span class="type T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">y</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_VAR">var</span> <span class="normal T_IDENTIFIER">y</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">y</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_IDENTIFIER">something</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">y</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// OK: something couldn&#39;t have changed y</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_STRING">&quot;default&quot;</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<p>Another way to help Flow keep a refinement is to use a <code class="highlighter-rouge">const</code> binding.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">foo</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span> <span class="normal T_ARROW">=&gt;</span> <span class="normal T_LCURLY">{</span>
+      <span class="comment line">// We don&#39;t know when this function will be invoked, and `null` might be</span>
+      <span class="comment line">// written to `x` before it is.</span>
+      <span class="normal T_LPAREN">(</span><span class="error" data-error-id="E11" data-message-id="M11001"><span class="error" data-error-id="E12" data-message-id="M12001"><span class="normal T_IDENTIFIER">x</span></span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E11" data-message-id="M11003"><span class="error" data-error-id="E12" data-message-id="M12003"><span class="type T_STRING_TYPE">string</span></span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RCURLY">}</span>
+  <span class="normal T_RCURLY">}</span>
+
+  <span class="normal T_CONST">const</span> <span class="normal T_IDENTIFIER">const_x</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">const_x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span> <span class="normal T_ARROW">=&gt;</span> <span class="normal T_LCURLY">{</span>
+      <span class="comment line">// Regardless of when this function is invoked, `null` can never be</span>
+      <span class="comment line">// written to `const_x`, so we can keep the refinement.</span>
+      <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">const_x</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RCURLY">}</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>6:       (<strong>x</strong>: string);
+          ^ null. This type is incompatible with
+6:       (x: <strong>string</strong>);
+             ^^^^^^ string
+
+6:       (<strong>x</strong>: string);
+          ^ undefined. This type is incompatible with
+6:       (x: <strong>string</strong>);
+             ^^^^^^ string</code></pre>
+</div>
+
+
+</div>
+
+<p>In some cases, Flow will throw away a refinement that is always safe to keep.
+In the following example, Flow doesn’t have enough information to realize that
+<code class="highlighter-rouge">console.log</code> will not mutate <code class="highlighter-rouge">x</code>.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">foo</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">y</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span> <span class="type T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E13" data-message-id="M13003"><span class="error" data-error-id="E14" data-message-id="M14003"><span class="type T_STRING_TYPE">string</span></span></span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">y</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_IDENTIFIER">console</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">log</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;*obviously* this doesn&#39;t mutate x&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RETURN">return</span> <span class="error" data-error-id="E13" data-message-id="M13001"><span class="error" data-error-id="E14" data-message-id="M14001"><span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">y</span></span></span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// error: Flow doesn&#39;t know that</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_STRING">&quot;default&quot;</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>4:     return <strong>x.y</strong>; // error: Flow doesn&#39;t know that
+              ^^^ null. This type is incompatible with the expected return type of
+1: function foo(x: { y: ?string }): <strong>string</strong> {
+                                    ^^^^^^ string
+
+4:     return <strong>x.y</strong>; // error: Flow doesn&#39;t know that
+              ^^^ undefined. This type is incompatible with the expected return type of
+1: function foo(x: { y: ?string }): <strong>string</strong> {
+                                    ^^^^^^ string</code></pre>
+</div>
+
+
+</div>
+
+<p>Flow does perform a mutation analysis and where it is safe to do so, will
+preserve refinements after function calls which it knows do not invalidate the
+refinement.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">bar</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">baz</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span> <span class="comment block">/* this doesn&#39;t mutate x */</span> <span class="normal T_RCURLY">}</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_IDENTIFIER">baz</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// Flow understands that `baz` can&#39;t invalidate the refinement.</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_STRING">&quot;default&quot;</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<script>require(['inlineErrors'], function(inlineErrors) {
+  inlineErrors.highlight([{"id":"E1","messages":[{"id":"M1001","description":"null","context":"    return x;","source":"-","start":{"line":32,"column":12,"offset":985},"end":{"line":32,"column":12,"offset":986}},{"id":"M1002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M1003","description":"string","context":"function maybe_test(x: ?string): string {","source":"-","start":{"line":29,"column":34,"offset":882},"end":{"line":29,"column":39,"offset":888}}],"operation":null},{"id":"E2","messages":[{"id":"M2001","description":"undefined","context":"    return x;","source":"-","start":{"line":32,"column":12,"offset":985},"end":{"line":32,"column":12,"offset":986}},{"id":"M2002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M2003","description":"string","context":"function maybe_test(x: ?string): string {","source":"-","start":{"line":29,"column":34,"offset":882},"end":{"line":29,"column":39,"offset":888}}],"operation":null},{"id":"E3","messages":[{"id":"M3001","description":"null","context":"    return x;","source":"-","start":{"line":42,"column":12,"offset":1197},"end":{"line":42,"column":12,"offset":1198}},{"id":"M3002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M3003","description":"string","context":"function null_undefined_tests(x: ?string): string {","source":"-","start":{"line":39,"column":44,"offset":1108},"end":{"line":39,"column":49,"offset":1114}}],"operation":null},{"id":"E4","messages":[{"id":"M4001","description":"undefined","context":"    return x;","source":"-","start":{"line":45,"column":12,"offset":1297},"end":{"line":45,"column":12,"offset":1298}},{"id":"M4002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M4003","description":"string","context":"function null_undefined_tests(x: ?string): string {","source":"-","start":{"line":39,"column":44,"offset":1108},"end":{"line":39,"column":49,"offset":1114}}],"operation":null},{"id":"E5","messages":[{"id":"M5001","description":"string","context":"    return x;","source":"-","start":{"line":72,"column":12,"offset":1904},"end":{"line":72,"column":12,"offset":1905}},{"id":"M5002","description":"Expected string literal ``","context":null},{"id":"M5003","description":"string literal ``","context":"function string_truthiness(x: string): \"\" {","source":"-","start":{"line":69,"column":40,"offset":1800},"end":{"line":69,"column":41,"offset":1802}}],"operation":null},{"id":"E6","messages":[{"id":"M6001","description":"number","context":"    return x;","source":"-","start":{"line":82,"column":12,"offset":2144},"end":{"line":82,"column":12,"offset":2145}},{"id":"M6002","description":"Expected number literal `0`","context":null},{"id":"M6003","description":"number literal `0`","context":"function number_truthiness(x: number): 0 {","source":"-","start":{"line":79,"column":40,"offset":2042},"end":{"line":79,"column":40,"offset":2043}}],"operation":null},{"id":"E7","messages":[{"id":"M7001","description":"null","context":"    return x; // x can still be null","source":"-","start":{"line":124,"column":12,"offset":3214},"end":{"line":124,"column":12,"offset":3215}},{"id":"M7002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M7003","description":"object type","context":"function typeof_null(x: ?Object): Object {","source":"-","start":{"line":122,"column":35,"offset":3163},"end":{"line":122,"column":40,"offset":3169}}],"operation":null},{"id":"E8","messages":[{"id":"M8001","description":"property `value`","context":"  e.target.value;","source":"-","start":{"line":158,"column":12,"offset":3855},"end":{"line":158,"column":16,"offset":3860}},{"id":"M8002","description":"Property not found in","context":null},{"id":"M8003","description":"EventTarget","context":"  e.target.value;","source":"-","start":{"line":158,"column":3,"offset":3846},"end":{"line":158,"column":10,"offset":3854}}],"operation":null},{"id":"E9","messages":[{"id":"M9001","description":"null","context":"    return x.y; // error: x.y may be null/undefined","source":"-","start":{"line":196,"column":12,"offset":4726},"end":{"line":196,"column":14,"offset":4729}},{"id":"M9002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M9003","description":"string","context":"function foo(x: { y: ?string }): string {","source":"-","start":{"line":193,"column":34,"offset":4676},"end":{"line":193,"column":39,"offset":4682}}],"operation":null},{"id":"E10","messages":[{"id":"M10001","description":"undefined","context":"    return x.y; // error: x.y may be null/undefined","source":"-","start":{"line":196,"column":12,"offset":4726},"end":{"line":196,"column":14,"offset":4729}},{"id":"M10002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M10003","description":"string","context":"function foo(x: { y: ?string }): string {","source":"-","start":{"line":193,"column":34,"offset":4676},"end":{"line":193,"column":39,"offset":4682}}],"operation":null},{"id":"E11","messages":[{"id":"M11001","description":"null","context":"      (x: string);","source":"-","start":{"line":230,"column":8,"offset":5609},"end":{"line":230,"column":8,"offset":5610}},{"id":"M11002","description":"This type is incompatible with","context":null},{"id":"M11003","description":"string","context":"      (x: string);","source":"-","start":{"line":230,"column":11,"offset":5612},"end":{"line":230,"column":16,"offset":5618}}],"operation":null},{"id":"E12","messages":[{"id":"M12001","description":"undefined","context":"      (x: string);","source":"-","start":{"line":230,"column":8,"offset":5609},"end":{"line":230,"column":8,"offset":5610}},{"id":"M12002","description":"This type is incompatible with","context":null},{"id":"M12003","description":"string","context":"      (x: string);","source":"-","start":{"line":230,"column":11,"offset":5612},"end":{"line":230,"column":16,"offset":5618}}],"operation":null},{"id":"E13","messages":[{"id":"M13001","description":"null","context":"    return x.y; // error: Flow doesn't know that","source":"-","start":{"line":253,"column":12,"offset":6181},"end":{"line":253,"column":14,"offset":6184}},{"id":"M13002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M13003","description":"string","context":"function foo(x: { y: ?string }): string {","source":"-","start":{"line":250,"column":34,"offset":6094},"end":{"line":250,"column":39,"offset":6100}}],"operation":null},{"id":"E14","messages":[{"id":"M14001","description":"undefined","context":"    return x.y; // error: Flow doesn't know that","source":"-","start":{"line":253,"column":12,"offset":6181},"end":{"line":253,"column":14,"offset":6184}},{"id":"M14002","description":"This type is incompatible with the expected return type of","context":null},{"id":"M14003","description":"string","context":"function foo(x: { y: ?string }): string {","source":"-","start":{"line":250,"column":34,"offset":6094},"end":{"line":250,"column":39,"offset":6100}}],"operation":null}]);
+});</script>
+
+    <p class="docs-prevnext">
+      
+        <a href="/docs/typeof.html#_">&larr; Prev</a>
+      
+      
+        <a class="right" href="/docs/disjoint-unions.html#_">Next &rarr;</a>
+      
+    </p>
+
+
+    <a id="_"></a>
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

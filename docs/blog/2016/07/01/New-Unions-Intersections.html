@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | New Implementation of Unions and Intersections</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="New Implementation of Unions and Intersections" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html">
+    
+    <meta property='og:type' content='article'>
+    <meta property='article:author' content="">
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+          >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  <section>
+    <h3>Recent Releases</h3>
+    <ul>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.30.0">
+            v0.30.0
+          </a>
+          <small>(July 29, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.29.0">
+            v0.29.0
+          </a>
+          <small>(July 14, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.28.0">
+            v0.28.0
+          </a>
+          <small>(July  5, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.27.0">
+            v0.27.0
+          </a>
+          <small>(June 10, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.26.0">
+            v0.26.0
+          </a>
+          <small>(May 27, 2016)</small>
+        </li>
+      
+      <li>
+        <a href="https://github.com/facebook/flow/releases">
+          All releases...
+        </a>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h3>Recent Posts</h3>
+    <ul>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/08/01/Windows-Support.html">
+            Windows Support
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+             class="active" 
+            href="/blog/2016/07/01/New-Unions-Intersections.html">
+            New Unions and Intersections
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/02/02/Version-0.21.0.html">
+            Version 0.21.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/12/01/Version-0.19.0.html">
+            Version 0.19.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/11/09/Generators.html">
+            Generators
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/10/07/Version-0.17.0.html">
+            Version 0.17.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/22/Version-0.16.0.html">
+            Version 0.16.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/10/Version-0.15.0.html">
+            Version 0.15.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/29/Version-0.14.0.html">
+            Version 0.14.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/03/Disjoint-Unions.html">
+            Disjoint Unions
+            
+          </a>
+        </li>
+      
+      <li><a
+        
+        href="/blog/all.html">All posts...</a></li>
+    </ul>
+  <section>
+</nav>
+
+
+<article class='withtoc'>
+    <h1>New Implementation of Unions and Intersections</h1>
+    <p class="meta">July  1, 2016 by </p>
+
+    <h2>Summary<a id="summary" class="hashref"></a><a href="#summary" class="hash">#</a></h2>
+
+<p>Before Flow 0.28, the implementation of union/intersection types had serious bugs and was <a href="https://github.com/facebook/flow/issues/1759">the</a> <a href="https://github.com/facebook/flow/issues/1664">root</a> <a href="https://github.com/facebook/flow/issues/1663">cause</a> <a href="https://github.com/facebook/flow/issues/1462">of</a> <a href="https://github.com/facebook/flow/issues/1455">a</a> <a href="https://github.com/facebook/flow/issues/1371">lot</a> <a href="https://github.com/facebook/flow/issues/1349">of</a> <a href="https://github.com/facebook/flow/issues/824">weird</a> <a href="https://github.com/facebook/flow/issues/815">behaviors</a> you may have run into with Flow in the past. These bugs have now been addressed in <a href="https://github.com/facebook/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac">a diff landing in 0.28</a>.</p>
+
+<!--truncate-->
+
+<p>As you might expect after a major rewrite of a tricky part of the type system implementation, there will be a short period of adjustment: you may run into kinks that we will try to iron out promptly, and you may run into some unfamiliar error messages.</p>
+
+<h2>New Error Messages<a id="new-error-messages" class="hashref"></a><a href="#new-error-messages" class="hash">#</a></h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;error location&gt; Could not decide which case to select
+&lt;location of union/intersection type&gt;
+
+  Case 1 may work:
+  &lt;location of 1st case of union/intersection type&gt;
+
+  But if it doesn't, case 2 looks promising too:
+  &lt;location of 2nd case of union/intersection type&gt;
+
+  Please provide additional annotation(s) to determine whether case 1 works
+  (or consider merging it with case 2):
+  &lt;location to annotate&gt;
+  &lt;location to annotate&gt;
+  ...
+</code></pre>
+</div>
+
+<p>What this means is that at <code class="highlighter-rouge">&lt;error location&gt;</code>, Flow needs to make a choice: one of the members of the union/intersection type at <code class="highlighter-rouge">&lt;location of union/intersection type&gt;</code> must be applied, but Flow can’t choose safely based on available information. In particular, it cannot decide between case <code class="highlighter-rouge">1</code> and <code class="highlighter-rouge">2</code>, so Flow lists a bunch of annotations that can help it disambiguate the two cases.</p>
+
+<h2>Actions Needed<a id="actions-needed" class="hashref"></a><a href="#actions-needed" class="hash">#</a></h2>
+
+<p>You can fix the errors in two ways:</p>
+
+<ul>
+  <li>Actually go and annotate the listed locations. This should be by far the most common fix.</li>
+  <li>Discover that there is real, unintentional ambiguity between case 1 and 2, and rewrite the two cases in the union type to remove the ambiguity. When this happens, typically it will fix a large number of errors.</li>
+</ul>
+
+<p>There are two more possibilities, however:</p>
+
+<ul>
+  <li>There’s no real ambiguity and Flow is being too conservative / dumb. In this case, go ahead and do the annotations anyway and file an issue on GitHub. We plan to do a lot of short-term follow-up work to disambiguate more cases automatically, so over time you should see less of (3).</li>
+  <li>You have no idea what’s going on. The cases being pointed to don’t make sense. They don’t correspond to what you have at <code class="highlighter-rouge">&lt;error location&gt;</code>. Hopefully you won’t run into (4) too often, but if you do <strong>please file an issue</strong>, since this means there are still latent bugs in the implementation.</li>
+</ul>
+
+<p>If you file an issue on GitHub, please include code to reproduce the issue. You can use <a href="https://flowtype.org/try/">Try Flow</a> to share your repro case easily.</p>
+
+<p>If you’re curious about the whys and hows of these new error messages, here’s an excerpt from the commit message of the “fate of the union” diff:</p>
+
+<h2>Problem<a id="problem" class="hashref"></a><a href="#problem" class="hash">#</a></h2>
+
+<p>Flow’s inference engine is designed to find more errors over time as constraints are added…but it is not designed to backtrack. Unfortunately, checking the type of an expression against a union type does need backtracking: if some branch of the union doesn’t work out, the next branch must be tried, and so on. (The same is true for checks that involve intersection types.)</p>
+
+<p>The situation is further complicated by the fact that the type of the expression may not be completely known at the point of checking, so that a branch that looks promising now might turn out to be incorrect later.</p>
+
+<h2>Solution<a id="solution" class="hashref"></a><a href="#solution" class="hash">#</a></h2>
+
+<p>The basic idea is to delay trying a branch until a point where we can decide whether the branch will definitely fail or succeed, without further information. If trying a branch results in failure, we can move on to the next branch without needing to backtrack. If a branch succeeds, we are done. The final case is where the branch looks promising, but we cannot be sure without adding constraints: in this case we try other branches, and <em>bail</em> when we run into ambiguities…requesting additional annotations to decide which branch to select. Overall, this means that (1) we never commit to a branch that might turn out to be incorrect and (2) can always select a correct branch (if such exists) given enough annotations.</p>
+
+
+
+    <a 
+  href="https://twitter.com/share" 
+  class="twitter-share-button" 
+  data-url="http://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html" 
+  data-text="Flow | New Implementation of Unions and Intersections" 
+  data-hashtags="flowtype">Tweet</a>
+<div 
+  class="fb-like" 
+  data-href="http://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html" 
+  data-layout="standard" 
+  data-action="like"
+  data-show-faces="true"
+  data-share="true"></div>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

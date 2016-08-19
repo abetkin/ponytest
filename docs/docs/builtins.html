@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Built-in Types</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Built-in Types" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/docs/builtins.html">
+    
+    <meta property='og:type' content='website'>
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+           class="active" >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  
+    <section>
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/getting-started.html#_">
+              Example
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+    <section>
+      <h3>User Guide</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/new-project.html#_">
+              Some section
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Built-in Types</h1>
+    <p></p>
+
+    
+<p>Flow includes many built-in types, which can be used to describe values in
+JavaScript.</p>
+
+<p>There are types for primitive values, like <code class="highlighter-rouge">number</code> and <code class="highlighter-rouge">string</code>. Types like
+<code class="highlighter-rouge">any</code> and <code class="highlighter-rouge">mixed</code> describe more flexible constraints on values, whereas
+literal types describe specifically a single value.</p>
+
+<p>Flow comes out of the box with support for the JavaScript standard library,
+Browser APIs like the DOM, and the Node.js standard library.</p>
+
+<h4>Note about typecast syntax<a id="note-about-typecast-syntax" class="hashref"></a><a href="#note-about-typecast-syntax" class="hash">#</a></h4>
+
+<p>The following examples make extensive use of typecasts in order to demonstrate
+type compatibility.</p>
+
+<p>In Flow, typecasts are sound, meaning that the statement <code class="highlighter-rouge">(e:T)</code> for some
+expression <code class="highlighter-rouge">e</code> and type <code class="highlighter-rouge">T</code> is a type error unless the inferred type of <code class="highlighter-rouge">e</code> is
+a valid subtype of <code class="highlighter-rouge">T</code>.</p>
+
+<p>In other words, with respect to validity a typecast behaves just like a type
+annotation on a variable or parameter. If <code class="highlighter-rouge">var x:T = e</code> would be valid, then
+<code class="highlighter-rouge">(e:T)</code> would be as well.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="error" data-error-id="E1" data-message-id="M1001"><span class="normal T_NUMBER">1</span> <span class="normal T_PLUS">+</span> <span class="normal T_NUMBER">1</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E1" data-message-id="M1003"><span class="type T_STRING_TYPE">string</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// Error: Numbers are not strings</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;Hello, World&quot;</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// OK: Strings are strings</span>
+
+<span class="normal T_CLASS">class</span> <span class="normal T_IDENTIFIER">A</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span>
+<span class="normal T_CLASS">class</span> <span class="normal T_IDENTIFIER">B</span> <span class="normal T_EXTENDS">extends</span> <span class="normal T_IDENTIFIER">A</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span>
+<span class="normal T_LET">let</span> <span class="normal T_IDENTIFIER">a</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_NEW">new</span> <span class="normal T_IDENTIFIER">A</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_COMMA">,</span>
+    <span class="normal T_IDENTIFIER">b</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_NEW">new</span> <span class="normal T_IDENTIFIER">B</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">b</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">A</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// OK: B is a subclass of A</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E2" data-message-id="M2001"><span class="normal T_IDENTIFIER">a</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E2" data-message-id="M2003"><span class="type T_IDENTIFIER">B</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// Error: A is not a subclass of B</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>1: (<strong>1 + 1</strong>: string); // Error: Numbers are not strings
+    ^^^^^ number. This type is incompatible with
+1: (1 + 1: <strong>string</strong>); // Error: Numbers are not strings
+           ^^^^^^ string
+
+9: (<strong>a</strong>: B); // Error: A is not a subclass of B
+    ^ A. This type is incompatible with
+9: (a: <strong>B</strong>); // Error: A is not a subclass of B
+       ^ B</code></pre>
+</div>
+
+
+</div>
+
+<h2>boolean<a id="boolean" class="hashref"></a><a href="#boolean" class="hash">#</a></h2>
+
+<p>This type describes a boolean value in JavaScript. The possible values of this
+type are <code class="highlighter-rouge">true</code> and <code class="highlighter-rouge">false</code>.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="normal T_TRUE">true</span><span class="type T_COLON">:</span> <span class="type T_BOOLEAN_TYPE">boolean</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_FALSE">false</span><span class="type T_COLON">:</span> <span class="type T_BOOLEAN_TYPE">boolean</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E3" data-message-id="M3001"><span class="normal T_STRING">&quot;foo&quot;</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E3" data-message-id="M3003"><span class="type T_BOOLEAN_TYPE">boolean</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// strings are not booleans</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>3: (<strong>&quot;foo&quot;</strong>: boolean); // strings are not booleans
+    ^^^^^ string. This type is incompatible with
+3: (&quot;foo&quot;: <strong>boolean</strong>); // strings are not booleans
+           ^^^^^^^ boolean</code></pre>
+</div>
+
+
+</div>
+
+<p>JavaScript specifies many implicit conversions, which provide boolean
+semantics to values of other types. Flow understands this and allows any
+expression to be used as a conditional in an <code class="highlighter-rouge">if</code> statement or as an operand
+to <code class="highlighter-rouge">&amp;&amp;</code>. However, if you need to cast an object specifically to the <code class="highlighter-rouge">boolean</code>
+type, you can use the built-in <code class="highlighter-rouge">Boolean</code> function</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">takes_boolean</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E4" data-message-id="M4003"><span class="type T_BOOLEAN_TYPE">boolean</span></span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_VOID_TYPE">void</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span>
+<span class="normal T_IDENTIFIER">takes_boolean</span><span class="normal T_LPAREN">(</span><span class="error" data-error-id="E4" data-message-id="M4001"><span class="normal T_NUMBER">0</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// Implicit casting is an error.</span>
+<span class="normal T_IDENTIFIER">takes_boolean</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">Boolean</span><span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">0</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// Adding an explicit cast type checks.</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>2: <strong>takes_boolean(0)</strong>; // Implicit casting is an error.
+   ^^^^^^^^^^^^^^^^ function call
+2: takes_boolean(<strong>0</strong>); // Implicit casting is an error.
+                 ^ number. This type is incompatible with
+1: function takes_boolean(x: <strong>boolean</strong>): void {}
+                             ^^^^^^^ boolean</code></pre>
+</div>
+
+
+</div>
+
+<p>Note that <code class="highlighter-rouge">boolean</code> and <code class="highlighter-rouge">Boolean</code> are separate types. The former is the type
+of primitive booleans which appear in programs as literals <code class="highlighter-rouge">true</code> and <code class="highlighter-rouge">false</code>,
+or as the result of expressions like <code class="highlighter-rouge">a === b</code>. The latter is the type of
+Boolean wrapper objects, which are rarely used.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="error" data-error-id="E5" data-message-id="M5001"><span class="normal T_TRUE">true</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E5" data-message-id="M5003"><span class="type T_IDENTIFIER">Boolean</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_NEW">new</span> <span class="normal T_IDENTIFIER">Boolean</span><span class="normal T_LPAREN">(</span><span class="normal T_FALSE">false</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Boolean</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>1: (<strong>true</strong>: Boolean);
+    ^^^^ boolean. This type is incompatible with
+1: (true: <strong>Boolean</strong>);
+          ^^^^^^^ Boolean</code></pre>
+</div>
+
+
+</div>
+
+<h2>number<a id="number" class="hashref"></a><a href="#number" class="hash">#</a></h2>
+
+<p>JavaScript has a single number type, which is IEEE 754 floating point numbers.
+The <code class="highlighter-rouge">number</code> type describes these values, which includes <code class="highlighter-rouge">Infinity</code> and <code class="highlighter-rouge">NaN</code>.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">3.14</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">42</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">NaN</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">parseFloat</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;not a number&quot;</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// hint: NaN</span></code></pre>
+</div>
+
+<p>Note that <code class="highlighter-rouge">number</code> and <code class="highlighter-rouge">Number</code> are separate types. The former is the type of
+primitive numbers which appear in programs as literals, like <code class="highlighter-rouge">3.14</code> and <code class="highlighter-rouge">42</code>,
+or as the result of expressions like <code class="highlighter-rouge">parseFloat(input.value)</code>.  The latter is
+the type of Number wrapper objects, which are rarely used.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="error" data-error-id="E6" data-message-id="M6001"><span class="normal T_NUMBER">0</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E6" data-message-id="M6003"><span class="type T_IDENTIFIER">Number</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_NEW">new</span> <span class="normal T_IDENTIFIER">Number</span><span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">0</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>1: (<strong>0</strong>: Number);
+    ^ number. This type is incompatible with
+1: (0: <strong>Number</strong>);
+       ^^^^^^ Number</code></pre>
+</div>
+
+
+</div>
+
+<h2>string<a id="string" class="hashref"></a><a href="#string" class="hash">#</a></h2>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;bar&quot;</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>Generally, implicit type casting is an error with Flow. However, it is a
+fairly common JavaScript idiom to produce a string by combining a <code class="highlighter-rouge">string</code> and
+a <code class="highlighter-rouge">number</code> with the binary operator <code class="highlighter-rouge">+</code>, so Flow accepts it.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_LPAREN">(</span><span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">100</span> <span class="normal T_PLUS">+</span> <span class="normal T_STRING">&quot;%&quot;</span><span class="normal T_RPAREN">)</span> <span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>Note that <code class="highlighter-rouge">string</code> and <code class="highlighter-rouge">String</code> are separate types. The former is the type of
+primitive strings which appear in programs as literals, like <code class="highlighter-rouge">"foo"</code> and
+<code class="highlighter-rouge">"bar"</code>, or as the result of expressions like <code class="highlighter-rouge">"" + 42</code>. The latter is the
+type of String wrapper objects, which are rarely used.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="error" data-error-id="E7" data-message-id="M7001"><span class="normal T_STRING">&quot;foo&quot;</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E7" data-message-id="M7003"><span class="type T_IDENTIFIER">String</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_NEW">new</span> <span class="normal T_IDENTIFIER">String</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">String</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>1: (<strong>&quot;foo&quot;</strong>: String);
+    ^^^^^ string. This type is incompatible with
+1: (&quot;foo&quot;: <strong>String</strong>);
+           ^^^^^^ String</code></pre>
+</div>
+
+
+</div>
+
+<h2>null and void<a id="null-and-void" class="hashref"></a><a href="#null-and-void" class="hash">#</a></h2>
+
+<p>JavaScript has both <code class="highlighter-rouge">null</code> and <code class="highlighter-rouge">undefined</code>, which Flow is careful to treat
+separately. <code class="highlighter-rouge">null</code> (the value) has the type <code class="highlighter-rouge">null</code>. <code class="highlighter-rouge">undefined</code> has the type
+<code class="highlighter-rouge">void</code>.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="normal T_NULL">null</span><span class="type T_COLON">:</span> <span class="type T_NULL">null</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// yup</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E8" data-message-id="M8001"><span class="normal T_NULL">null</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E8" data-message-id="M8003"><span class="type T_VOID_TYPE">void</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// nope</span>
+
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">undefined</span><span class="type T_COLON">:</span> <span class="type T_VOID_TYPE">void</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// yup</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E9" data-message-id="M9001"><span class="normal T_IDENTIFIER">undefined</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E9" data-message-id="M9003"><span class="type T_NULL">null</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// nope</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>2: (<strong>null</strong>: void); // nope
+    ^^^^ null. This type is incompatible with
+2: (null: <strong>void</strong>); // nope
+          ^^^^ undefined
+
+5: (<strong>undefined</strong>: null); // nope
+    ^^^^^^^^^ undefined. This type is incompatible with
+5: (undefined: <strong>null</strong>); // nope
+               ^^^^ null</code></pre>
+</div>
+
+
+</div>
+
+<p>Optional object properties and optional function parameters have the type
+<code class="highlighter-rouge">T|void</code>, for some type <code class="highlighter-rouge">T</code>.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">optional_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">foo</span><span class="normal T_PLING">?</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E10" data-message-id="M10003"><span class="type T_STRING_TYPE">string</span></span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="type T_BIT_OR">|</span><span class="type T_VOID_TYPE">void</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span>
+<span class="normal T_IDENTIFIER">optional_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">optional_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">undefined</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">optional_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">optional_fun</span><span class="normal T_LPAREN">(</span><span class="error" data-error-id="E10" data-message-id="M10001"><span class="normal T_NULL">null</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// null is not a string, nor void</span>
+
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">optional_obj</span> <span class="type T_ASSIGN">=</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">foo</span><span class="type T_PLING">?</span><span class="type T_COLON">:</span> <span class="error" data-error-id="E11" data-message-id="M11003"><span class="type T_STRING_TYPE">string</span></span> <span class="type T_RCURLY">}</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_LCURLY">{</span><span class="normal T_IDENTIFIER">foo</span><span class="normal T_COLON">:</span> <span class="normal T_STRING">&quot;foo&quot;</span><span class="normal T_RCURLY">}</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">optional_obj</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_LCURLY">{</span><span class="normal T_IDENTIFIER">foo</span><span class="normal T_COLON">:</span> <span class="normal T_IDENTIFIER">undefined</span><span class="normal T_RCURLY">}</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">optional_obj</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">optional_obj</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_LCURLY">{</span><span class="normal T_IDENTIFIER">foo</span><span class="normal T_COLON">:</span> <span class="error" data-error-id="E11" data-message-id="M11001"><span class="normal T_NULL">null</span></span><span class="normal T_RCURLY">}</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">optional_obj</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// null is not a string, nor void</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>7: <strong>optional_fun(null)</strong>; // null is not a string, nor void
+   ^^^^^^^^^^^^^^^^^^ function call
+7: optional_fun(<strong>null</strong>); // null is not a string, nor void
+                ^^^^ null. This type is incompatible with
+1: function optional_fun(foo?: <strong>string</strong>) {
+                               ^^^^^^ string
+
+13: ({foo: <strong>null</strong>}: optional_obj); // null is not a string, nor void
+           ^^^^ null. This type is incompatible with
+9: type optional_obj = { foo?: <strong>string</strong> }
+                               ^^^^^^ string</code></pre>
+</div>
+
+
+</div>
+
+<p>Function parameters that have a default are optional as well, but only for
+callers. Within the function body, the binding has a non-<code class="highlighter-rouge">void</code> type.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">default_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_STRING">&quot;default foo&quot;</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span>
+<span class="normal T_IDENTIFIER">default_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">default_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">undefined</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">default_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>Maybe types have the type <code class="highlighter-rouge">T|void|null</code> for some type <code class="highlighter-rouge">T</code>.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">maybe_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_PLING">?</span><span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="type T_BIT_OR">|</span><span class="type T_VOID_TYPE">void</span><span class="type T_BIT_OR">|</span><span class="type T_NULL">null</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span>
+<span class="normal T_IDENTIFIER">maybe_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">maybe_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">undefined</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">maybe_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">maybe_fun</span><span class="normal T_LPAREN">(</span><span class="normal T_NULL">null</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></code></pre>
+</div>
+
+<h2>any<a id="any" class="hashref"></a><a href="#any" class="hash">#</a></h2>
+
+<p><code class="highlighter-rouge">any</code> is simultaneously a supertype of all types and a subtype of all types.
+Intuitively, an <code class="highlighter-rouge">any</code> value can take the place of “any” other value, and Flow
+will understand that to be well-typed.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">takes_any</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_ANY_TYPE">any</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_VOID_TYPE">void</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span>
+<span class="normal T_IDENTIFIER">takes_any</span><span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">0</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">takes_any</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">takes_any</span><span class="normal T_LPAREN">(</span><span class="normal T_LCURLY">{</span> <span class="normal T_IDENTIFIER">foo</span><span class="normal T_COLON">:</span> <span class="normal T_STRING">&quot;bar&quot;</span> <span class="normal T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+
+<span class="normal T_DECLARE">declare</span> <span class="normal T_VAR">var</span> <span class="normal T_IDENTIFIER">unsafe</span><span class="type T_COLON">:</span> <span class="type T_ANY_TYPE">any</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">unsafe</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">unsafe</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">unsafe</span><span class="type T_COLON">:</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="type T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>In addition to compatibility between types, it’s useful to think of <code class="highlighter-rouge">any</code> in
+terms of operations that can be performed on values. Accessing any property on
+an <code class="highlighter-rouge">any</code> will yield an <code class="highlighter-rouge">any</code>. It is possible to call an <code class="highlighter-rouge">any</code> as a function,
+taking any number arguments of any type, which will also return <code class="highlighter-rouge">any</code>.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_IDENTIFIER">unsafe</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">foo</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">bar</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">baz</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">unsafe</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">unsafe</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;bar&quot;</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_TYPE">number</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>You can think of <code class="highlighter-rouge">any</code> as a kind of “backdoor” in the type system. Use of
+<code class="highlighter-rouge">any</code> is inherently unsafe and should be avoided whenever possible. However,
+it can also be incredibly convenient.</p>
+
+<p>For example, when adding types to existing code, using <code class="highlighter-rouge">any</code> can help make the
+gradual transition from untyped to typed code. Similarly, modeling third-party
+APIs with <code class="highlighter-rouge">any</code> can ease integration.</p>
+
+<p>Lastly, due to the highly dynamic nature of JavaScript, there are some idioms
+which Flow does not yet understand. Principled use of <code class="highlighter-rouge">any</code> makes it possible
+to wrap untyped code in types.</p>
+
+<h2>mixed<a id="mixed" class="hashref"></a><a href="#mixed" class="hash">#</a></h2>
+
+<p>Like <code class="highlighter-rouge">any</code>, <code class="highlighter-rouge">mixed</code> is a supertype of all types. Unlike <code class="highlighter-rouge">any</code>, however,
+<code class="highlighter-rouge">mixed</code> is not a subtype of all types. This means <code class="highlighter-rouge">mixed</code> is like a safe 
+but somewhat annoying version of <code class="highlighter-rouge">any</code>. It should be preferred over <code class="highlighter-rouge">any</code>
+whenever possible.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">takes_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">mixed</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_VOID_TYPE">void</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span>
+<span class="normal T_IDENTIFIER">takes_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">0</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">takes_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">takes_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_LCURLY">{</span> <span class="normal T_IDENTIFIER">foo</span><span class="normal T_COLON">:</span> <span class="normal T_STRING">&quot;bar&quot;</span> <span class="normal T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">returns_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">mixed</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E12" data-message-id="M12001"><span class="normal T_IDENTIFIER">returns_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E12" data-message-id="M12003"><span class="type T_NUMBER_TYPE">number</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E13" data-message-id="M13001"><span class="normal T_IDENTIFIER">returns_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E13" data-message-id="M13003"><span class="type T_STRING_TYPE">string</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E14" data-message-id="M14001"><span class="normal T_IDENTIFIER">returns_mixed</span><span class="normal T_LPAREN">(</span><span class="normal T_RPAREN">)</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E14" data-message-id="M14003"><span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">foo</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="type T_RCURLY">}</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>7: (<strong>returns_mixed()</strong>: number);
+    ^^^^^^^^^^^^^^^ mixed. This type is incompatible with
+7: (returns_mixed(): <strong>number</strong>);
+                     ^^^^^^ number
+
+8: (<strong>returns_mixed()</strong>: string);
+    ^^^^^^^^^^^^^^^ mixed. This type is incompatible with
+8: (returns_mixed(): <strong>string</strong>);
+                     ^^^^^^ string
+
+9: (<strong>returns_mixed()</strong>: { foo: string });
+    ^^^^^^^^^^^^^^^ mixed. This type is incompatible with
+9: (returns_mixed(): <strong>{ foo: string }</strong>);
+                     ^^^^^^^^^^^^^^^ object type</code></pre>
+</div>
+
+
+</div>
+
+<p>It’s still possible to use a value with a <code class="highlighter-rouge">mixed</code>, but you must first
+<a href="/docs/dynamic-type-tests.html">refine</a> the value.</p>
+
+<p>For example, let’s construct a type of values which can be expressed directly
+as JSON. We can express this type quite naturally.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">JSON</span> <span class="type T_ASSIGN">=</span> <span class="type T_BIT_OR">|</span> <span class="type T_STRING_TYPE">string</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_TYPE">number</span> <span class="type T_BIT_OR">|</span> <span class="type T_BOOLEAN_TYPE">boolean</span> <span class="type T_BIT_OR">|</span> <span class="type T_NULL">null</span> <span class="type T_BIT_OR">|</span> <span class="type T_IDENTIFIER">JSONObject</span> <span class="type T_BIT_OR">|</span> <span class="type T_IDENTIFIER">JSONArray</span><span class="type T_SEMICOLON">;</span>
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">JSONObject</span> <span class="type T_ASSIGN">=</span> <span class="type T_LCURLY">{</span> <span class="type T_LBRACKET">[</span><span class="type T_IDENTIFIER">key</span><span class="type T_COLON">:</span><span class="type T_STRING_TYPE">string</span><span class="type T_RBRACKET">]</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">JSON</span> <span class="type T_RCURLY">}</span><span class="type T_SEMICOLON">;</span>
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">JSONArray</span> <span class="type T_ASSIGN">=</span> <span class="type T_IDENTIFIER">Array</span><span class="type T_LESS_THAN">&lt;</span><span class="type T_IDENTIFIER">JSON</span><span class="type T_GREATER_THAN">&gt;</span><span class="type T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>Now let’s write a function that verifies that a given value is a JSON value.
+If we annotated the parameter as <code class="highlighter-rouge">any</code>, we could just return the parameter and
+Flow would accept that without error because <code class="highlighter-rouge">any</code> is a subtype of all types,
+including <code class="highlighter-rouge">JSON</code>.</p>
+
+<p>If we use <code class="highlighter-rouge">mixed</code>, however, we can still pass any value into our function, as
+<code class="highlighter-rouge">mixed</code> is a supertype of all types. But in order to satisfy the <code class="highlighter-rouge">JSON</code> return
+type, Flow requires us to implement the necessary runtime type checks.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">typedJSON</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">mixed</span><span class="normal T_RPAREN">)</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">JSON</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;object&quot;</span> <span class="normal T_AND">&amp;&amp;</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_NOT_EQUAL">!==</span> <span class="normal T_NULL">null</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_LET">let</span> <span class="normal T_IDENTIFIER">o</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">JSONObject</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_LCURLY">{</span><span class="normal T_RCURLY">}</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_FOR">for</span> <span class="normal T_LPAREN">(</span><span class="normal T_LET">let</span> <span class="normal T_IDENTIFIER">k</span> <span class="normal T_OF">of</span> <span class="normal T_IDENTIFIER">Object</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">keys</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+      <span class="normal T_IDENTIFIER">o</span><span class="normal T_LBRACKET">[</span><span class="normal T_IDENTIFIER">k</span><span class="normal T_RBRACKET">]</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_IDENTIFIER">typedJSON</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_LBRACKET">[</span><span class="normal T_IDENTIFIER">k</span><span class="normal T_RBRACKET">]</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RCURLY">}</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">o</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">Array</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">isArray</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">map</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">typedJSON</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_NULL">null</span> <span class="normal T_OR">||</span>
+      <span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;string&quot;</span> <span class="normal T_OR">||</span>
+      <span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;number&quot;</span> <span class="normal T_OR">||</span>
+      <span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">x</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;boolean&quot;</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">x</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+
+  <span class="normal T_THROW">throw</span> <span class="normal T_NEW">new</span> <span class="normal T_IDENTIFIER">Error</span><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;Invalid JSON&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<h2>literal types<a id="literal-types" class="hashref"></a><a href="#literal-types" class="hash">#</a></h2>
+
+<p>While type <code class="highlighter-rouge">boolean</code>, <code class="highlighter-rouge">number</code>, and <code class="highlighter-rouge">string</code> types admit <code class="highlighter-rouge">true</code> and <code class="highlighter-rouge">false</code>,
+any number, and any string, respectively, it can also be useful to specify a
+type that admits a single value. This feature turns out to be surprisingly
+<a href="disjoint-unions.html">versatile</a>: literal types can be used to build enums
+and other disjoint unions, as well as express some common forms of method
+overloading for which the types <code class="highlighter-rouge">boolean</code>, <code class="highlighter-rouge">number</code>, and <code class="highlighter-rouge">string</code> are not
+adequate.</p>
+<div class="code-sample">
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15</pre>
+        </td>
+        <td class="code"><pre><span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;foo&quot;</span><span class="type T_COLON">:</span> <span class="type T_STRING">&quot;foo&quot;</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E15" data-message-id="M15001"><span class="normal T_STRING">&quot;bar&quot;</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E15" data-message-id="M15003"><span class="type T_STRING">&quot;foo&quot;</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// `&quot;bar&quot;` is not exactly `&quot;foo&quot;`</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E16" data-message-id="M16001"><span class="normal T_STRING">&quot;fo&quot;</span><span class="normal T_PLUS">+</span><span class="normal T_STRING">&quot;o&quot;</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E16" data-message-id="M16003"><span class="type T_STRING">&quot;foo&quot;</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// even simple expressions lose literal information</span>
+
+<span class="normal T_LPAREN">(</span><span class="normal T_NUMBER">1</span><span class="type T_COLON">:</span> <span class="type T_NUMBER_SINGLETON_TYPE">1</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E17" data-message-id="M17001"><span class="normal T_NUMBER">2</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E17" data-message-id="M17003"><span class="type T_NUMBER_SINGLETON_TYPE">1</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// `2` is not exactly `1`</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E18" data-message-id="M18001"><span class="normal T_NUMBER">1</span><span class="normal T_PLUS">+</span><span class="normal T_NUMBER">1</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E18" data-message-id="M18003"><span class="type T_NUMBER_SINGLETON_TYPE">2</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// even simple expressions lose literal information</span>
+
+<span class="normal T_LPAREN">(</span><span class="normal T_TRUE">true</span><span class="type T_COLON">:</span> <span class="type T_TRUE">true</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="error" data-error-id="E19" data-message-id="M19001"><span class="normal T_TRUE">true</span></span><span class="type T_COLON">:</span> <span class="error" data-error-id="E19" data-message-id="M19003"><span class="type T_FALSE">false</span></span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// `true` is not exactly `false`</span>
+
+<span class="comment line">// boolean expressions *do* preserve literal information</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_NOT">!</span><span class="normal T_TRUE">true</span><span class="type T_COLON">:</span> <span class="type T_FALSE">false</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_TRUE">true</span> <span class="normal T_AND">&amp;&amp;</span> <span class="normal T_FALSE">false</span><span class="type T_COLON">:</span> <span class="type T_FALSE">false</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_LPAREN">(</span><span class="normal T_TRUE">true</span> <span class="normal T_OR">||</span> <span class="normal T_FALSE">false</span><span class="type T_COLON">:</span> <span class="type T_TRUE">true</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span></pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>2: (<strong>&quot;bar&quot;</strong>: &quot;foo&quot;); // `&quot;bar&quot;` is not exactly `&quot;foo&quot;`
+    ^^^^^ string. Expected string literal `foo`, got `bar` instead
+2: (&quot;bar&quot;: <strong>&quot;foo&quot;</strong>); // `&quot;bar&quot;` is not exactly `&quot;foo&quot;`
+           ^^^^^ string literal `foo`
+
+3: (<strong>&quot;fo&quot;+&quot;o&quot;</strong>: &quot;foo&quot;); // even simple expressions lose literal information
+    ^^^^^^^^ string. Expected string literal `foo`
+3: (&quot;fo&quot;+&quot;o&quot;: <strong>&quot;foo&quot;</strong>); // even simple expressions lose literal information
+              ^^^^^ string literal `foo`
+
+6: (<strong>2</strong>: 1); // `2` is not exactly `1`
+    ^ number. Expected number literal `1`, got `2` instead
+6: (2: <strong>1</strong>); // `2` is not exactly `1`
+       ^ number literal `1`
+
+7: (<strong>1+1</strong>: 2); // even simple expressions lose literal information
+    ^^^ number. Expected number literal `2`
+7: (1+1: <strong>2</strong>); // even simple expressions lose literal information
+         ^ number literal `2`
+
+10: (<strong>true</strong>: false); // `true` is not exactly `false`
+     ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+10: (true: <strong>false</strong>); // `true` is not exactly `false`
+           ^^^^^ boolean literal `false`</code></pre>
+</div>
+
+
+</div>
+
+<p>Let’s have a little fun with literal types. The following program shows how
+literals can be used to statically index into objects. It also shows how
+tuples of unions can be used to represent enums.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Suit</span> <span class="type T_ASSIGN">=</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Diamonds&quot;</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Clubs&quot;</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Hearts&quot;</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Spades&quot;</span><span class="type T_SEMICOLON">;</span>
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Rank</span> <span class="type T_ASSIGN">=</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">2</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">3</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">4</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">5</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">6</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">7</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">8</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">9</span> <span class="type T_BIT_OR">|</span> <span class="type T_NUMBER_SINGLETON_TYPE">10</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Jack&quot;</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Queen&quot;</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;King&quot;</span>
+  <span class="type T_BIT_OR">|</span> <span class="type T_STRING">&quot;Ace&quot;</span><span class="type T_SEMICOLON">;</span>
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Card</span> <span class="type T_ASSIGN">=</span> <span class="type T_LCURLY">{</span>
+  <span class="normal T_IDENTIFIER">suit</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Suit</span><span class="type T_COMMA">,</span>
+  <span class="normal T_IDENTIFIER">rank</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Rank</span><span class="type T_COMMA">,</span>
+<span class="type T_RCURLY">}</span>
+
+<span class="normal T_DECLARE">declare</span> <span class="normal T_VAR">var</span> <span class="normal T_IDENTIFIER">cards</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Card</span><span class="type T_LBRACKET">[</span><span class="type T_RBRACKET">]</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">cards</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">sort</span><span class="normal T_LPAREN">(</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">b</span><span class="normal T_RPAREN">)</span> <span class="normal T_ARROW">=&gt;</span> <span class="normal T_IDENTIFIER">cardComparator</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">b</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_IDENTIFIER">cards</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">sort</span><span class="normal T_LPAREN">(</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">b</span><span class="normal T_RPAREN">)</span> <span class="normal T_ARROW">=&gt;</span> <span class="normal T_IDENTIFIER">cardComparator</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">b</span><span class="normal T_COMMA">,</span> <span class="normal T_TRUE">true</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span> <span class="comment line">// Aces high</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">suitOrder</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">suit</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_RETURN">return</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_IDENTIFIER">Diamonds</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">0</span><span class="normal T_COMMA">,</span>
+    <span class="normal T_IDENTIFIER">Clubs</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">1</span><span class="normal T_COMMA">,</span>
+    <span class="normal T_IDENTIFIER">Hearts</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">3</span><span class="normal T_COMMA">,</span>
+    <span class="normal T_IDENTIFIER">Spades</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">4</span><span class="normal T_COMMA">,</span>
+  <span class="normal T_RCURLY">}</span><span class="normal T_LBRACKET">[</span><span class="normal T_IDENTIFIER">suit</span><span class="normal T_RBRACKET">]</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">rankOrder</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">rank</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">aceHigh</span> <span class="normal T_ASSIGN">=</span> <span class="normal T_FALSE">false</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IF">if</span> <span class="normal T_LPAREN">(</span><span class="normal T_TYPEOF">typeof</span> <span class="normal T_IDENTIFIER">rank</span> <span class="normal T_STRICT_EQUAL">===</span> <span class="normal T_STRING">&quot;string&quot;</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_LCURLY">{</span>
+      <span class="normal T_IDENTIFIER">Jack</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">11</span><span class="normal T_COMMA">,</span>
+      <span class="normal T_IDENTIFIER">Queen</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">12</span><span class="normal T_COMMA">,</span>
+      <span class="normal T_IDENTIFIER">King</span><span class="normal T_COLON">:</span> <span class="normal T_NUMBER">13</span><span class="normal T_COMMA">,</span>
+      <span class="normal T_IDENTIFIER">Ace</span><span class="normal T_COLON">:</span> <span class="normal T_IDENTIFIER">aceHigh</span> <span class="normal T_PLING">?</span> <span class="normal T_NUMBER">14</span> <span class="normal T_COLON">:</span> <span class="normal T_NUMBER">1</span><span class="normal T_COMMA">,</span>
+    <span class="normal T_RCURLY">}</span><span class="normal T_LBRACKET">[</span><span class="normal T_IDENTIFIER">rank</span><span class="normal T_RBRACKET">]</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span> <span class="normal T_ELSE">else</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_RETURN">return</span> <span class="normal T_IDENTIFIER">rank</span><span class="normal T_SEMICOLON">;</span>
+  <span class="normal T_RCURLY">}</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">cardComparator</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">b</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">aceHigh</span><span class="normal T_PLING">?</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_RETURN">return</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">rankOrder</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">rank</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">aceHigh</span><span class="normal T_RPAREN">)</span> <span class="normal T_MINUS">-</span> <span class="normal T_IDENTIFIER">rankOrder</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">b</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">rank</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">aceHigh</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span>
+      <span class="normal T_OR">||</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">suitOrder</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">a</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">suit</span><span class="normal T_RPAREN">)</span> <span class="normal T_MINUS">-</span> <span class="normal T_IDENTIFIER">suitOrder</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">b</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">suit</span><span class="normal T_RPAREN">)</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<p>Note that Flow is able to infer the parameter and return types of <code class="highlighter-rouge">suitOrder</code>,
+<code class="highlighter-rouge">rankOrder</code>, and <code class="highlighter-rouge">cardComparator</code> correctly. Try copying that into your text
+editor and introducing type errors to see what Flow can catch!</p>
+
+<h2>JavaScript standard library<a id="javascript-standard-library" class="hashref"></a><a href="#javascript-standard-library" class="hash">#</a></h2>
+
+<p>Type declarations for the <a href="https://github.com/facebook/flow/blob/master/lib/core.js">JavaScript standard library</a> are included
+with Flow.</p>
+
+<p>Flow has broad support for the standard library, including support for
+Iterables, Iterators, and Generators.</p>
+
+<h2>Browser APIs<a id="browser-apis" class="hashref"></a><a href="#browser-apis" class="hash">#</a></h2>
+
+<p>Type declarations for the <a href="https://github.com/facebook/flow/blob/master/lib/dom.js">Document Object Model</a> (DOM), <a href="https://github.com/facebook/flow/blob/master/lib/bom.js">Browser Object
+Model</a> (BOM), and <a href="https://github.com/facebook/flow/blob/master/lib/cssom.js">CSS Object Model</a> (CSSOM) are all included with
+Flow.</p>
+
+<h2>Node.js<a id="nodejs" class="hashref"></a><a href="#nodejs" class="hash">#</a></h2>
+
+<p>Type declarations for the <a href="https://github.com/facebook/flow/blob/master/lib/node.js">Node.js standard library</a> are included with
+Flow.</p>
+
+<script>require(['inlineErrors'], function(inlineErrors) {
+  inlineErrors.highlight([{"id":"E1","messages":[{"id":"M1001","description":"number","context":"(1 + 1: string); // Error: Numbers are not strings","source":"-","start":{"line":39,"column":2,"offset":1103},"end":{"line":39,"column":6,"offset":1108}},{"id":"M1002","description":"This type is incompatible with","context":null},{"id":"M1003","description":"string","context":"(1 + 1: string); // Error: Numbers are not strings","source":"-","start":{"line":39,"column":9,"offset":1110},"end":{"line":39,"column":14,"offset":1116}}],"operation":null},{"id":"E2","messages":[{"id":"M2001","description":"A","context":"(a: B); // Error: A is not a subclass of B","source":"-","start":{"line":47,"column":2,"offset":1310},"end":{"line":47,"column":2,"offset":1311}},{"id":"M2002","description":"This type is incompatible with","context":null},{"id":"M2003","description":"B","context":"(a: B); // Error: A is not a subclass of B","source":"-","start":{"line":47,"column":5,"offset":1313},"end":{"line":47,"column":5,"offset":1314}}],"operation":null},{"id":"E3","messages":[{"id":"M3001","description":"string","context":"(\"foo\": boolean); // strings are not booleans","source":"-","start":{"line":58,"column":2,"offset":1522},"end":{"line":58,"column":6,"offset":1527}},{"id":"M3002","description":"This type is incompatible with","context":null},{"id":"M3003","description":"boolean","context":"(\"foo\": boolean); // strings are not booleans","source":"-","start":{"line":58,"column":9,"offset":1529},"end":{"line":58,"column":15,"offset":1536}}],"operation":null},{"id":"E4","messages":[{"id":"M4001","description":"number","context":"takes_boolean(0); // Implicit casting is an error.","source":"-","start":{"line":69,"column":15,"offset":1991},"end":{"line":69,"column":15,"offset":1992}},{"id":"M4002","description":"This type is incompatible with","context":null},{"id":"M4003","description":"boolean","context":"function takes_boolean(x: boolean): void {}","source":"-","start":{"line":68,"column":27,"offset":1959},"end":{"line":68,"column":33,"offset":1966}}],"operation":{"description":"function call\n","context":"takes_boolean(0); // Implicit casting is an error.","source":"-","start":{"line":69,"column":1,"offset":1977},"end":{"line":69,"column":16,"offset":1993}}},{"id":"E5","messages":[{"id":"M5001","description":"boolean","context":"(true: Boolean);","source":"-","start":{"line":79,"column":2,"offset":2390},"end":{"line":79,"column":5,"offset":2394}},{"id":"M5002","description":"This type is incompatible with","context":null},{"id":"M5003","description":"Boolean","context":"(true: Boolean);","source":"-","start":{"line":79,"column":8,"offset":2396},"end":{"line":79,"column":14,"offset":2403}}],"operation":null},{"id":"E6","messages":[{"id":"M6001","description":"number","context":"(0: Number);","source":"-","start":{"line":102,"column":2,"offset":3028},"end":{"line":102,"column":2,"offset":3029}},{"id":"M6002","description":"This type is incompatible with","context":null},{"id":"M6003","description":"Number","context":"(0: Number);","source":"-","start":{"line":102,"column":5,"offset":3031},"end":{"line":102,"column":10,"offset":3037}}],"operation":null},{"id":"E7","messages":[{"id":"M7001","description":"string","context":"(\"foo\": String);","source":"-","start":{"line":127,"column":2,"offset":3668},"end":{"line":127,"column":6,"offset":3673}},{"id":"M7002","description":"This type is incompatible with","context":null},{"id":"M7003","description":"String","context":"(\"foo\": String);","source":"-","start":{"line":127,"column":9,"offset":3675},"end":{"line":127,"column":14,"offset":3681}}],"operation":null},{"id":"E8","messages":[{"id":"M8001","description":"null","context":"(null: void); // nope","source":"-","start":{"line":139,"column":2,"offset":3929},"end":{"line":139,"column":5,"offset":3933}},{"id":"M8002","description":"This type is incompatible with","context":null},{"id":"M8003","description":"undefined","context":"(null: void); // nope","source":"-","start":{"line":139,"column":8,"offset":3935},"end":{"line":139,"column":11,"offset":3939}}],"operation":null},{"id":"E9","messages":[{"id":"M9001","description":"undefined","context":"(undefined: null); // nope","source":"-","start":{"line":142,"column":2,"offset":3978},"end":{"line":142,"column":10,"offset":3987}},{"id":"M9002","description":"This type is incompatible with","context":null},{"id":"M9003","description":"null","context":"(undefined: null); // nope","source":"-","start":{"line":142,"column":13,"offset":3989},"end":{"line":142,"column":16,"offset":3993}}],"operation":null},{"id":"E10","messages":[{"id":"M10001","description":"null","context":"optional_fun(null); // null is not a string, nor void","source":"-","start":{"line":155,"column":14,"offset":4256},"end":{"line":155,"column":17,"offset":4260}},{"id":"M10002","description":"This type is incompatible with","context":null},{"id":"M10003","description":"string","context":"function optional_fun(foo?: string) {","source":"-","start":{"line":149,"column":29,"offset":4147},"end":{"line":149,"column":34,"offset":4153}}],"operation":{"description":"function call\n","context":"optional_fun(null); // null is not a string, nor void","source":"-","start":{"line":155,"column":1,"offset":4243},"end":{"line":155,"column":18,"offset":4261}}},{"id":"E11","messages":[{"id":"M11001","description":"null","context":"({foo: null}: optional_obj); // null is not a string, nor void","source":"-","start":{"line":161,"column":8,"offset":4426},"end":{"line":161,"column":11,"offset":4430}},{"id":"M11002","description":"This type is incompatible with","context":null},{"id":"M11003","description":"string","context":"type optional_obj = { foo?: string }","source":"-","start":{"line":157,"column":29,"offset":4326},"end":{"line":157,"column":34,"offset":4332}}],"operation":null},{"id":"E12","messages":[{"id":"M12001","description":"mixed","context":"(returns_mixed(): number);","source":"-","start":{"line":243,"column":2,"offset":6760},"end":{"line":243,"column":16,"offset":6775}},{"id":"M12002","description":"This type is incompatible with","context":null},{"id":"M12003","description":"number","context":"(returns_mixed(): number);","source":"-","start":{"line":243,"column":19,"offset":6777},"end":{"line":243,"column":24,"offset":6783}}],"operation":null},{"id":"E13","messages":[{"id":"M13001","description":"mixed","context":"(returns_mixed(): string);","source":"-","start":{"line":244,"column":2,"offset":6787},"end":{"line":244,"column":16,"offset":6802}},{"id":"M13002","description":"This type is incompatible with","context":null},{"id":"M13003","description":"string","context":"(returns_mixed(): string);","source":"-","start":{"line":244,"column":19,"offset":6804},"end":{"line":244,"column":24,"offset":6810}}],"operation":null},{"id":"E14","messages":[{"id":"M14001","description":"mixed","context":"(returns_mixed(): { foo: string });","source":"-","start":{"line":245,"column":2,"offset":6814},"end":{"line":245,"column":16,"offset":6829}},{"id":"M14002","description":"This type is incompatible with","context":null},{"id":"M14003","description":"object type","context":"(returns_mixed(): { foo: string });","source":"-","start":{"line":245,"column":19,"offset":6831},"end":{"line":245,"column":33,"offset":6846}}],"operation":null},{"id":"E15","messages":[{"id":"M15001","description":"string","context":"(\"bar\": \"foo\"); // `\"bar\"` is not exactly `\"foo\"`","source":"-","start":{"line":306,"column":2,"offset":8717},"end":{"line":306,"column":6,"offset":8722}},{"id":"M15002","description":"Expected string literal `foo`, got `bar` instead","context":null},{"id":"M15003","description":"string literal `foo`","context":"(\"bar\": \"foo\"); // `\"bar\"` is not exactly `\"foo\"`","source":"-","start":{"line":306,"column":9,"offset":8724},"end":{"line":306,"column":13,"offset":8729}}],"operation":null},{"id":"E16","messages":[{"id":"M16001","description":"string","context":"(\"fo\"+\"o\": \"foo\"); // even simple expressions lose literal information","source":"-","start":{"line":307,"column":2,"offset":8767},"end":{"line":307,"column":9,"offset":8775}},{"id":"M16002","description":"Expected string literal `foo`","context":null},{"id":"M16003","description":"string literal `foo`","context":"(\"fo\"+\"o\": \"foo\"); // even simple expressions lose literal information","source":"-","start":{"line":307,"column":12,"offset":8777},"end":{"line":307,"column":16,"offset":8782}}],"operation":null},{"id":"E17","messages":[{"id":"M17001","description":"number","context":"(2: 1); // `2` is not exactly `1`","source":"-","start":{"line":310,"column":2,"offset":8847},"end":{"line":310,"column":2,"offset":8848}},{"id":"M17002","description":"Expected number literal `1`, got `2` instead","context":null},{"id":"M17003","description":"number literal `1`","context":"(2: 1); // `2` is not exactly `1`","source":"-","start":{"line":310,"column":5,"offset":8850},"end":{"line":310,"column":5,"offset":8851}}],"operation":null},{"id":"E18","messages":[{"id":"M18001","description":"number","context":"(1+1: 2); // even simple expressions lose literal information","source":"-","start":{"line":311,"column":2,"offset":8881},"end":{"line":311,"column":4,"offset":8884}},{"id":"M18002","description":"Expected number literal `2`","context":null},{"id":"M18003","description":"number literal `2`","context":"(1+1: 2); // even simple expressions lose literal information","source":"-","start":{"line":311,"column":7,"offset":8886},"end":{"line":311,"column":7,"offset":8887}}],"operation":null},{"id":"E19","messages":[{"id":"M19001","description":"boolean","context":"(true: false); // `true` is not exactly `false`","source":"-","start":{"line":314,"column":2,"offset":8958},"end":{"line":314,"column":5,"offset":8962}},{"id":"M19002","description":"Expected boolean literal `false`, got `true` instead","context":null},{"id":"M19003","description":"boolean literal `false`","context":"(true: false); // `true` is not exactly `false`","source":"-","start":{"line":314,"column":8,"offset":8964},"end":{"line":314,"column":12,"offset":8969}}],"operation":null}]);
+});</script>
+
+    <p class="docs-prevnext">
+      
+        <a href="/docs/quick-reference.html#_">&larr; Prev</a>
+      
+      
+        <a class="right" href="/docs/syntax.html#_">Next &rarr;</a>
+      
+    </p>
+
+
+    <a id="_"></a>
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

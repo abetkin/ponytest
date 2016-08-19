@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Disjoint Unions</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Disjoint Unions" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/docs/disjoint-unions.html">
+    
+    <meta property='og:type' content='website'>
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+           class="active" >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  
+    <section>
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/getting-started.html#_">
+              Example
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+    <section>
+      <h3>User Guide</h3>
+      <ul>
+        
+          <li>
+            <a href="/docs/new-project.html#_">
+              Some section
+            </a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Disjoint Unions</h1>
+    <p></p>
+
+    
+<p>Sometimes programs need to deal with different kinds of data all at once,
+where the shape of the data can be different based on what kind of data the
+code is looking at. This kind of programming is so common in functional
+programming languages that almost all such languages come with a way of:</p>
+
+<ul>
+  <li>
+    <p>Specifying such data by a set of disjoint cases, distinguished by “tags,”
+where each tag is associated with a different “record” of properties. (These
+descriptions are called “disjoint union” or “variant” types.)</p>
+  </li>
+  <li>
+    <p>Doing case analysis on such data, by checking tags and then directly
+accessing the associated record of properties. (The common way to do such case
+analysis is by pattern matching.)</p>
+  </li>
+</ul>
+
+<p>Examples of programs that analyze or transform such data range from compilers
+working with abstract syntax trees, to operations that may return exceptional
+values, with much more in between!</p>
+
+<p>With Flow, it is possible to program in this style in JavaScript in a
+type-safe manner. You can define a disjoint union of object types and do case
+analysis on objects of that type by switching on the value of some common
+property (called a “sentinel”) in those object types.</p>
+
+<h2>Example<a id="example" class="hashref"></a><a href="#example" class="hash">#</a></h2>
+
+<p>Consider a computation that takes an argument and a callback that is invoked
+when the computation is complete, with a success or failure result. As a
+concrete example, suppose that we are interested in computing the inverse of a
+matrix (which may or may not exist).</p>
+
+<p>The result type can be modeled as a disjoint union type. In terms of syntax, a
+disjoint union type is just a specific form of <a href="union-intersection-types.html">union
+type</a>. In addition, a disjoint union type makes
+heavy use of <a href="builtins.html#literal-types">literal types</a>: this is important,
+because we will see below how Flow can relate these types back to dynamic
+equality checks with literals that appear commonly in JavaScript code.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Matrix</span> <span class="type T_ASSIGN">=</span> <span class="type T_NUMBER_TYPE">number</span><span class="type T_LBRACKET">[</span><span class="type T_RBRACKET">]</span><span class="type T_LBRACKET">[</span><span class="type T_RBRACKET">]</span><span class="type T_SEMICOLON">;</span> <span class="comment line">// type of input and output for our function</span>
+
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Result</span> <span class="type T_ASSIGN">=</span> <span class="type T_IDENTIFIER">Done</span> <span class="type T_BIT_OR">|</span> <span class="type T_IDENTIFIER">Error</span><span class="type T_SEMICOLON">;</span> <span class="comment line">// a disjoint union type with two cases</span>
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Done</span> <span class="type T_ASSIGN">=</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">status</span><span class="type T_COLON">:</span> <span class="type T_STRING">&#39;done&#39;</span><span class="type T_COMMA">,</span> <span class="normal T_IDENTIFIER">answer</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Matrix</span> <span class="type T_RCURLY">}</span><span class="type T_SEMICOLON">;</span>
+<span class="normal T_TYPE">type</span> <span class="type T_IDENTIFIER">Error</span> <span class="type T_ASSIGN">=</span> <span class="type T_LCURLY">{</span> <span class="normal T_IDENTIFIER">status</span><span class="type T_COLON">:</span> <span class="type T_STRING">&#39;error&#39;</span><span class="type T_COMMA">,</span> <span class="normal T_IDENTIFIER">message</span><span class="type T_COLON">:</span> <span class="type T_STRING_TYPE">string</span> <span class="type T_RCURLY">}</span><span class="type T_SEMICOLON">;</span></code></pre>
+</div>
+
+<p>Here, the property <code class="highlighter-rouge">status</code> serves as the sentinel property in <code class="highlighter-rouge">Result</code>: this
+is the property that actually makes the union type “disjoint.”</p>
+
+<p>Case analysis can be performed on results of type <code class="highlighter-rouge">Result</code> by matching the
+value of the <code class="highlighter-rouge">status</code> property with the literals <code class="highlighter-rouge">done</code> or <code class="highlighter-rouge">error</code>. Note that
+matching must be performed with the <code class="highlighter-rouge">===</code> operator. Conveniently, <code class="highlighter-rouge">switch</code>
+statements already use this operator, but using <code class="highlighter-rouge">if</code> with this operator also
+works.</p>
+
+<p>Flow will correctly narrow down the <code class="highlighter-rouge">Result</code> type to the corresponding cases,
+<code class="highlighter-rouge">Done</code> and <code class="highlighter-rouge">Error</code>, so that the properties <code class="highlighter-rouge">answer</code> and <code class="highlighter-rouge">message</code> can be
+accessed safely based on context.</p>
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code><span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">invert</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">matrix</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Matrix</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">callback</span><span class="type T_COLON">:</span> <span class="type T_LPAREN">(</span><span class="type T_IDENTIFIER">result</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Result</span><span class="type T_RPAREN">)</span> <span class="type T_ARROW">=&gt;</span> <span class="type T_VOID_TYPE">void</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="comment line">// Try to compute the inverse of `matrix`.</span>
+  <span class="comment line">// On success, invoke callback with `{ status: &#39;done&#39;, answer: ... }`.</span>
+  <span class="comment line">// On failure, involve callback with `{ status: &#39;error&#39;, message: ... }`.</span>
+
+  <span class="comment line">// ...</span>
+<span class="normal T_RCURLY">}</span>
+
+<span class="normal T_FUNCTION">function</span> <span class="normal T_IDENTIFIER">showInverseOf</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">matrix</span><span class="type T_COLON">:</span> <span class="type T_IDENTIFIER">Matrix</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+  <span class="normal T_IDENTIFIER">invert</span><span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">matrix</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">result</span> <span class="normal T_ARROW">=&gt;</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_SWITCH">switch</span> <span class="normal T_LPAREN">(</span><span class="normal T_IDENTIFIER">result</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">status</span><span class="normal T_RPAREN">)</span> <span class="normal T_LCURLY">{</span>
+    <span class="normal T_CASE">case</span> <span class="normal T_STRING">&#39;error&#39;</span><span class="normal T_COLON">:</span>
+      <span class="normal T_IDENTIFIER">console</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">log</span> <span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;Uh oh!&quot;</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">result</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">message</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+      <span class="normal T_BREAK">break</span><span class="normal T_SEMICOLON">;</span>  <span class="comment line">// see what happens if you forget to break! :)</span>
+    <span class="normal T_DEFAULT">default</span><span class="normal T_COLON">:</span>
+      <span class="normal T_IDENTIFIER">console</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">log</span> <span class="normal T_LPAREN">(</span><span class="normal T_STRING">&quot;Inverse:&quot;</span><span class="normal T_COMMA">,</span> <span class="normal T_IDENTIFIER">result</span><span class="normal T_PERIOD">.</span><span class="normal T_IDENTIFIER">answer</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+    <span class="normal T_RCURLY">}</span>
+  <span class="normal T_RCURLY">}</span><span class="normal T_RPAREN">)</span><span class="normal T_SEMICOLON">;</span>
+<span class="normal T_RCURLY">}</span></code></pre>
+</div>
+
+<script>require(['inlineErrors'], function(inlineErrors) {
+  inlineErrors.highlight([]);
+});</script>
+
+    <p class="docs-prevnext">
+      
+        <a href="/docs/dynamic-type-tests.html#_">&larr; Prev</a>
+      
+      
+        <a class="right" href="/docs/modules.html#_">Next &rarr;</a>
+      
+    </p>
+
+
+    <a id="_"></a>
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

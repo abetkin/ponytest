@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Version 0.21.0</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Version 0.21.0" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/blog/2016/02/02/Version-0.21.0.html">
+    
+    <meta property='og:type' content='article'>
+    <meta property='article:author' content="">
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+          >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  <section>
+    <h3>Recent Releases</h3>
+    <ul>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.30.0">
+            v0.30.0
+          </a>
+          <small>(July 29, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.29.0">
+            v0.29.0
+          </a>
+          <small>(July 14, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.28.0">
+            v0.28.0
+          </a>
+          <small>(July  5, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.27.0">
+            v0.27.0
+          </a>
+          <small>(June 10, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.26.0">
+            v0.26.0
+          </a>
+          <small>(May 27, 2016)</small>
+        </li>
+      
+      <li>
+        <a href="https://github.com/facebook/flow/releases">
+          All releases...
+        </a>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h3>Recent Posts</h3>
+    <ul>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/08/01/Windows-Support.html">
+            Windows Support
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/07/01/New-Unions-Intersections.html">
+            New Unions and Intersections
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+             class="active" 
+            href="/blog/2016/02/02/Version-0.21.0.html">
+            Version 0.21.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/12/01/Version-0.19.0.html">
+            Version 0.19.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/11/09/Generators.html">
+            Generators
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/10/07/Version-0.17.0.html">
+            Version 0.17.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/22/Version-0.16.0.html">
+            Version 0.16.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/10/Version-0.15.0.html">
+            Version 0.15.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/29/Version-0.14.0.html">
+            Version 0.14.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/03/Disjoint-Unions.html">
+            Disjoint Unions
+            
+          </a>
+        </li>
+      
+      <li><a
+        
+        href="/blog/all.html">All posts...</a></li>
+    </ul>
+  <section>
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Version 0.21.0</h1>
+    <p class="meta">February  2, 2016 by </p>
+
+    <p>Yesterday we deployed Flow v0.21.0! As always, we’ve listed out the most interesting changes in the <a href="https://github.com/facebook/flow/blob/master/Changelog.md#v0210">Changelog</a>. However, since I’m on a plane and can’t sleep, I thought it might be fun to dive into a couple of the changes! Hope this blog post turns out interesting and legible!</p>
+
+<h2>JSX Intrinsics<a id="jsx-intrinsics" class="hashref"></a><a href="#jsx-intrinsics" class="hash">#</a></h2>
+
+<p>If you’re writing JSX, it’s probably a mix of your own React Components and some intrinsics. For example, you might write</p>
+
+<pre><code class="language-JavaScript">render() {
+  return &lt;div&gt;&lt;FluffyBunny name="Fifi" /&gt;&lt;/div&gt;;
+}
+</code></pre>
+
+<p>In this example, <code class="highlighter-rouge">FluffyBunny</code> is a React Component you wrote and <code class="highlighter-rouge">div</code> is a JSX intrinsic. Lower-cased JSX elements are assumed to be intrinsics by React and by Flow. Up until Flow v0.21.0, Flow ignored intrinsics and gave them the type <code class="highlighter-rouge">any</code>. This meant Flow let you set any property on JSX intrinsics. Flow v0.21.0 will, by default, do the same thing as v0.20.0, However now you can also configure Flow to properly type your JSX intrinsics!</p>
+
+<!--truncate-->
+
+<h3>Example of how to use JSX intrinsics<a id="example-of-how-to-use-jsx-intrinsics" class="hashref"></a><a href="#example-of-how-to-use-jsx-intrinsics" class="hash">#</a></h3>
+
+<p>.flowconfig</p>
+
+<pre><code class="language-JavaScript">[libs]
+myLib.js
+</code></pre>
+
+<p>myLib.js</p>
+
+<pre><code class="language-JavaScript">// JSXHelper is a type alias to make this example more concise.
+// There's nothing special or magic here.
+// JSXHelper&lt;{name: string}&gt; is a React component
+// with the single string property "name", which has a default
+type JSXHelper&lt;T&gt; = Class&lt;ReactComponent&lt;T,T,mixed&gt;&gt;;
+
+// $JSXIntrinsics is special and magic.
+// This declares the types for `div` and `span`
+type $JSXIntrinsics = {
+  div: JSXHelper&lt;{id: string}&gt;,
+  span: JSXHelper&lt;{id: string, class: string}&gt;,
+};
+</code></pre>
+
+<p>myCode.js</p>
+
+<pre><code class="language-JavaScript">&lt;div id="asdf" /&gt;; // No error
+&lt;div id={42} /&gt;; // Error: `id` prop is a string, not a number!
+</code></pre>
+
+<h3>What is going on here?<a id="what-is-going-on-here" class="hashref"></a><a href="#what-is-going-on-here" class="hash">#</a></h3>
+
+<p>The new bit of magic is this <code class="highlighter-rouge">$JSXIntrinsics</code> type alias. When Flow sees <code class="highlighter-rouge">&lt;foo /&gt;</code> it will look to see if <code class="highlighter-rouge">$JSXIntrinsics</code> exists and if so will grab the type of <code class="highlighter-rouge">$JSXIntrinsics['foo']</code>. It will use this type to figure out which properties are available and need to be set.</p>
+
+<p>We haven’t hardcoded the intrinsics into Flow since the available intrinsics will depend on your environment. For example, React native would have different intrinsics than React for the web would.</p>
+
+<h2>Smarter string refinements<a id="smarter-string-refinements" class="hashref"></a><a href="#smarter-string-refinements" class="hash">#</a></h2>
+
+<p>One of the main ways that we make Flow smarter is by teaching it to recognize more ways that JavaScript programmers refine types. Here’s an example of a common way to refine nullable values:</p>
+
+<pre><code class="language-JavaScript">class Person {
+  name: ?string;
+  ...
+  getName(): string {
+    // Before the if, this.name could be null, undefined, or a string
+    if (this.name != null) {
+      // But now the programmer has refined this.name to definitely be a string
+      return this.name;
+    }
+    // And now we know that this.name is null or undefined.
+    return 'You know who';
+  }
+}
+</code></pre>
+
+<h3>New string refinements<a id="new-string-refinements" class="hashref"></a><a href="#new-string-refinements" class="hash">#</a></h3>
+
+<p>In v0.21.0, one of the refinements we added is the ability to refine types by comparing them to strings.</p>
+
+<p>This is useful for refining unions of string literals into string literals</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>function test(x: 'foo' | 'bar'): 'foo' {
+  if (x === 'foo') {
+    // Now Flow understands that x has the type 'foo'
+    return x;
+  } else {
+    return 'foo';
+  }
+}
+</code></pre>
+</div>
+
+<p>And can also narrow the value of strings:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>function test(x: string): 'foo' {
+  if (x === 'foo') {
+    // Now Flow knows x has the type 'foo'
+    return x;
+  } else {
+    return 'foo';
+  }
+}
+</code></pre>
+</div>
+
+<p>This is one of the many refinements that Flow currently can recognize and follow, and we’ll keep adding more! Stay tuned!</p>
+
+
+    <a 
+  href="https://twitter.com/share" 
+  class="twitter-share-button" 
+  data-url="http://flowtype.org/blog/2016/02/02/Version-0.21.0.html" 
+  data-text="Flow | Version 0.21.0" 
+  data-hashtags="flowtype">Tweet</a>
+<div 
+  class="fb-like" 
+  data-href="http://flowtype.org/blog/2016/02/02/Version-0.21.0.html" 
+  data-layout="standard" 
+  data-action="like"
+  data-show-faces="true"
+  data-share="true"></div>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+

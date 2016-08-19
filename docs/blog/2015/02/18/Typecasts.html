@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>ponytest | Announcing Typecasts</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/default.css">
+    <link type="text/css" rel="stylesheet" href="/assets/syntax.css">
+    <link rel='shortcut icon' href='/static/favicon.png'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Announcing Typecasts" />
+    <meta property="og:site_name" content="flowtype">
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org/blog/2015/02/18/Typecasts.html">
+    
+    <meta property='og:type' content='article'>
+    <meta property='article:author' content="">
+    
+    <script type="text/javascript" src="/assets/prelude.js"></script>
+    <link rel="alternate" type="application/rss+xml" title="Flow" href="http://flowtype.org/blog/feed.xml">
+</head>
+<body class="">
+
+<header class='topbar'><nav class='width'>
+    <ul>
+        <li><a href="/" class="logo-color">
+          ponytest
+      </a></li>
+      <li><a href="/docs/getting-started.html#_"
+          >
+          Docs
+      </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
+      <li><a href="http://github.com/abetkin/ponytest">GitHub</a>
+    </ul>
+</nav></header>
+
+
+<section class='content'><div class='width'>
+
+<nav class='toc'>
+  <section>
+    <h3>Recent Releases</h3>
+    <ul>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.30.0">
+            v0.30.0
+          </a>
+          <small>(July 29, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.29.0">
+            v0.29.0
+          </a>
+          <small>(July 14, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.28.0">
+            v0.28.0
+          </a>
+          <small>(July  5, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.27.0">
+            v0.27.0
+          </a>
+          <small>(June 10, 2016)</small>
+        </li>
+      
+      
+        <li>
+          <a href="https://github.com/facebook/flow/releases/tag/v0.26.0">
+            v0.26.0
+          </a>
+          <small>(May 27, 2016)</small>
+        </li>
+      
+      <li>
+        <a href="https://github.com/facebook/flow/releases">
+          All releases...
+        </a>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h3>Recent Posts</h3>
+    <ul>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/08/01/Windows-Support.html">
+            Windows Support
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/07/01/New-Unions-Intersections.html">
+            New Unions and Intersections
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2016/02/02/Version-0.21.0.html">
+            Version 0.21.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/12/01/Version-0.19.0.html">
+            Version 0.19.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/11/09/Generators.html">
+            Generators
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/10/07/Version-0.17.0.html">
+            Version 0.17.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/22/Version-0.16.0.html">
+            Version 0.16.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/09/10/Version-0.15.0.html">
+            Version 0.15.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/29/Version-0.14.0.html">
+            Version 0.14.0
+            
+          </a>
+        </li>
+      
+      
+        <li>
+          <a
+            
+            href="/blog/2015/07/03/Disjoint-Unions.html">
+            Disjoint Unions
+            
+          </a>
+        </li>
+      
+      <li><a
+        
+        href="/blog/all.html">All posts...</a></li>
+    </ul>
+  <section>
+</nav>
+
+
+<article class='withtoc'>
+    <h1>Announcing Typecasts</h1>
+    <p class="meta">February 18, 2015 by </p>
+
+    <p>As of version 0.3.0, Flow supports typecast expression.</p>
+
+<p>A typecast expression is a simple way to type-annotate any JavaScript expression. Here are some examples of typecasts:</p>
+
+<pre><code class="language-JavaScript">(1 + 1 : number);
+var a = { name: (null: ?string) };
+([1, 'a', true]: Array&lt;mixed&gt;).map(fn);
+</code></pre>
+
+<p>For any JavaScript expression <code class="highlighter-rouge">&lt;expr&gt;</code> and any Flow type <code class="highlighter-rouge">&lt;type&gt;</code>, you can write</p>
+
+<pre><code class="language-JavaScript">(&lt;expr&gt; : &lt;type&gt;)
+</code></pre>
+
+<p><strong>Note:</strong> the parentheses are necessary.</p>
+
+<!--truncate-->
+
+<h2>How Typecasts Work<a id="how-typecasts-work" class="hashref"></a><a href="#how-typecasts-work" class="hash">#</a></h2>
+
+<p>To evaluate a typecast expression, Flow will first check that <code class="highlighter-rouge">&lt;expr&gt;</code> is a <code class="highlighter-rouge">&lt;type&gt;</code>.</p>
+
+<pre><code class="language-JavaScript">(1+1: number); // this is fine
+(1+1: string); // but this is is an error
+</code></pre>
+
+<p>Second, Flow will infer that the typecast expression <code class="highlighter-rouge">(&lt;expr&gt;: &lt;type&gt;)</code> has the type <code class="highlighter-rouge">&lt;type&gt;</code>.</p>
+
+<pre><code class="language-JavaScript">[(0: ?number)]; // Flow will infer the type Array&lt;?number&gt;
+[0];            // Without the typecast, Flow infers the type Array&lt;number&gt;
+</code></pre>
+
+<h2>Safety<a id="safety" class="hashref"></a><a href="#safety" class="hash">#</a></h2>
+
+<p>Typecasts obey the same rules as other type annotations, so they provide the same safety guarantees. This means they are safe unless you explicitly use the <code class="highlighter-rouge">any</code> type to defeat Flow’s typechecking. Here are examples of upcasting (which is allowed), downcasting (which is forbidden), and using <code class="highlighter-rouge">any</code>.</p>
+
+<pre><code class="language-JavaScript">class Base {}
+class Child extends Base {}
+var child: Child = new Child();
+
+// Upcast from Child to Base, a more general type: OK
+var base: Base = new Child();
+
+// Upcast from Child to Base, a more general type: OK
+(child: Base);
+
+// Downcast from Base to Child: unsafe, ERROR
+(base: Child);
+
+// Upcast base to any then downcast any to Child.
+// Unsafe downcasting from any is allowed: OK
+((base: any): Child);
+</code></pre>
+
+<h2>More examples<a id="more-examples" class="hashref"></a><a href="#more-examples" class="hash">#</a></h2>
+
+<p>Typecasts are particularly useful to check assumptions and help Flow infer the types you intend. Here are some examples:</p>
+
+<pre><code class="language-JavaScript">(x: number) // Make Flow check that x is a number
+(0: ?number) // Tells Flow that this expression is actually nullable.
+(null: ?number) // Tells Flow that this expression is a nullable number.
+</code></pre>
+
+<h2>Transformations<a id="transformations" class="hashref"></a><a href="#transformations" class="hash">#</a></h2>
+
+<p>Like type annotations and other Flow features, typecasts need to be transformed away before the code can be run. The transforms will be available in react-tools <code class="highlighter-rouge">0.13.0</code> when it is published soon, but for now they’re available in <code class="highlighter-rouge">0.13.0-beta.2</code>, which you can install with</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>npm install react-tools@0.13.0-beta.2
+</code></pre>
+</div>
+
+
+    <a 
+  href="https://twitter.com/share" 
+  class="twitter-share-button" 
+  data-url="http://flowtype.org/blog/2015/02/18/Typecasts.html" 
+  data-text="Flow | Announcing Typecasts" 
+  data-hashtags="flowtype">Tweet</a>
+<div 
+  class="fb-like" 
+  data-href="http://flowtype.org/blog/2015/02/18/Typecasts.html" 
+  data-layout="standard" 
+  data-action="like"
+  data-show-faces="true"
+  data-share="true"></div>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+</article>
+
+</div></section>
+
+<footer><div class='width'>
+    Built by <a href="https://ponyorm.com/">Pony ORM</a>
+</div></footer>
+
+<script>require(['default']);</script>
+</body>
+</html>
+
