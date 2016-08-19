@@ -1,230 +1,28 @@
+---
+---
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Flow</title>
-    <description>A static type checker for JavaScript</description>
-    <link>http://flowtype.org/blog</link>
-    <atom:link href="http://flowtype.org/blog/feed.xml" rel="self" type="application/rss+xml" />
-    
+    <title>{{ site.name | xml_escape }}</title>
+    <description>{% if site.description %}{{ site.description | xml_escape }}{% endif %}</description>
+    <link>{{ site.url }}/blog</link>
+    <atom:link href="{{ site.url }}/blog/feed.xml" rel="self" type="application/rss+xml" />
+    {% for post in site.posts limit:10 %}
       <item>
-        <title>Windows Support is Here!</title>
-        
-        <dc:creator></dc:creator>
+        <title>{{ post.title | xml_escape }}</title>
+        {% assign author = site.data.authors[post.author] %}
+        <dc:creator>{{ author.display_name | xml_escape }}</dc:creator>
         <description>
-          
-            &lt;p&gt;We are excited to announce that Flow is now officially available on 64-bit Windows! Starting with &lt;a href=&quot;https://github.com/facebook/flow/releases/tag/v0.30.0&quot;&gt;Flow v0.30.0&lt;/a&gt;, we will publish a Windows binary with each release. You can download the Windows binary in a .zip file directly from the &lt;a href=&quot;https://github.com/facebook/flow/releases&quot;&gt;GitHub releases page&lt;/a&gt; or install it using the &lt;a href=&quot;https://www.npmjs.com/package/flow-bin&quot;&gt;flow-bin npm package&lt;/a&gt;. Try it out and &lt;a href=&quot;https://github.com/facebook/flow/issues&quot;&gt;report any issues&lt;/a&gt; you come across!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/static/windows.gif&quot; alt=&quot;Windows Support GIF&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Getting Flow working on Windows was not easy, and it was made possible by the hard work of &lt;a href=&quot;https://github.com/OCamlPro-Henry&quot;&gt;Grégoire&lt;/a&gt;, &lt;a href=&quot;https://github.com/OCamlPro-Bozman&quot;&gt;Çagdas&lt;/a&gt; and &lt;a href=&quot;https://github.com/lefessan&quot;&gt;Fabrice&lt;/a&gt; from &lt;a href=&quot;https://www.ocamlpro.com/&quot;&gt;OCamlPro&lt;/a&gt;.&lt;/p&gt;
-
-
-          
+          {% if post.content contains '<!--truncate-->' %}
+            {{ post.content | split:'<!--truncate-->' | first | xml_escape }}
+          {% else %}
+            {{ post.content | xml_escape }}
+          {% endif %}
         </description>
-        <pubDate>Mon, 01 Aug 2016 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2016/08/01/Windows-Support.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2016/08/01/Windows-Support.html</guid>
+        <pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
+        <link>{{ site.url }}{{ post.url }}</link>
+        <guid isPermaLink="true">{{ site.url }}{{ post.url }}</guid>
       </item>
-    
-      <item>
-        <title>New Implementation of Unions and Intersections</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;h2&gt;Summary&lt;a id=&quot;summary&quot; class=&quot;hashref&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#summary&quot; class=&quot;hash&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Before Flow 0.28, the implementation of union/intersection types had serious bugs and was &lt;a href=&quot;https://github.com/facebook/flow/issues/1759&quot;&gt;the&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/1664&quot;&gt;root&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/1663&quot;&gt;cause&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/1462&quot;&gt;of&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/1455&quot;&gt;a&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/1371&quot;&gt;lot&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/1349&quot;&gt;of&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/824&quot;&gt;weird&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/flow/issues/815&quot;&gt;behaviors&lt;/a&gt; you may have run into with Flow in the past. These bugs have now been addressed in &lt;a href=&quot;https://github.com/facebook/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac&quot;&gt;a diff landing in 0.28&lt;/a&gt;.&lt;/p&gt;
-
-
-          
-        </description>
-        <pubDate>Fri, 01 Jul 2016 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html</guid>
-      </item>
-    
-      <item>
-        <title>Version 0.21.0</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;Yesterday we deployed Flow v0.21.0! As always, we’ve listed out the most interesting changes in the &lt;a href=&quot;https://github.com/facebook/flow/blob/master/Changelog.md#v0210&quot;&gt;Changelog&lt;/a&gt;. However, since I’m on a plane and can’t sleep, I thought it might be fun to dive into a couple of the changes! Hope this blog post turns out interesting and legible!&lt;/p&gt;
-
-&lt;h2&gt;JSX Intrinsics&lt;a id=&quot;jsx-intrinsics&quot; class=&quot;hashref&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#jsx-intrinsics&quot; class=&quot;hash&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;If you’re writing JSX, it’s probably a mix of your own React Components and some intrinsics. For example, you might write&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-JavaScript&quot;&gt;render() {
-  return &amp;lt;div&amp;gt;&amp;lt;FluffyBunny name=&quot;Fifi&quot; /&amp;gt;&amp;lt;/div&amp;gt;;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In this example, &lt;code class=&quot;highlighter-rouge&quot;&gt;FluffyBunny&lt;/code&gt; is a React Component you wrote and &lt;code class=&quot;highlighter-rouge&quot;&gt;div&lt;/code&gt; is a JSX intrinsic. Lower-cased JSX elements are assumed to be intrinsics by React and by Flow. Up until Flow v0.21.0, Flow ignored intrinsics and gave them the type &lt;code class=&quot;highlighter-rouge&quot;&gt;any&lt;/code&gt;. This meant Flow let you set any property on JSX intrinsics. Flow v0.21.0 will, by default, do the same thing as v0.20.0, However now you can also configure Flow to properly type your JSX intrinsics!&lt;/p&gt;
-
-
-          
-        </description>
-        <pubDate>Tue, 02 Feb 2016 00:00:00 -0800</pubDate>
-        <link>http://flowtype.org/blog/2016/02/02/Version-0.21.0.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2016/02/02/Version-0.21.0.html</guid>
-      </item>
-    
-      <item>
-        <title>Version 0.19.0</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;Flow v0.19.0 was deployed today! It has a ton of changes, which the &lt;a href=&quot;https://github.com/facebook/flow/blob/master/Changelog.md#v0190&quot;&gt;Changelog&lt;/a&gt; summarizes. The Changelog can be a little concise, though, so here are some longer explanations for some of the changes. Hope this helps!&lt;/p&gt;
-
-&lt;h2&gt;@noflow&lt;a id=&quot;noflow&quot; class=&quot;hashref&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#noflow&quot; class=&quot;hash&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Flow is opt-in by default (you add &lt;code class=&quot;highlighter-rouge&quot;&gt;@flow&lt;/code&gt; to a file). However we noticed that sometimes people would add Flow annotations to files that were missing &lt;code class=&quot;highlighter-rouge&quot;&gt;@flow&lt;/code&gt;. Often, these people didn’t notice that the file was being ignored by Flow. So we decided to stop allowing Flow syntax in non-Flow files. This is easily fixed by adding either &lt;code class=&quot;highlighter-rouge&quot;&gt;@flow&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;@noflow&lt;/code&gt; to your file. The former will make the file a Flow file. The latter will tell Flow to completely ignore the file.&lt;/p&gt;
-
-&lt;h2&gt;Declaration files&lt;a id=&quot;declaration-files&quot; class=&quot;hashref&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#declaration-files&quot; class=&quot;hash&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Files that end with &lt;code class=&quot;highlighter-rouge&quot;&gt;.flow&lt;/code&gt; are now treated specially. They are the preferred provider of modules. That is if both &lt;code class=&quot;highlighter-rouge&quot;&gt;foo.js&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;foo.js.flow&lt;/code&gt; exist, then when you write &lt;code class=&quot;highlighter-rouge&quot;&gt;import Foo from &#39;./foo&#39;&lt;/code&gt;, Flow will use the type exported from &lt;code class=&quot;highlighter-rouge&quot;&gt;foo.js.flow&lt;/code&gt; rather than &lt;code class=&quot;highlighter-rouge&quot;&gt;foo.js&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;We imagine two main ways people will use &lt;code class=&quot;highlighter-rouge&quot;&gt;.flow&lt;/code&gt; files.&lt;/p&gt;
-
-
-          
-        </description>
-        <pubDate>Tue, 01 Dec 2015 00:00:00 -0800</pubDate>
-        <link>http://flowtype.org/blog/2015/12/01/Version-0.19.0.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/12/01/Version-0.19.0.html</guid>
-      </item>
-    
-      <item>
-        <title>Typing Generators with Flow</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;Flow 0.14.0 included support for generator functions. Generator functions provide a unique ability to JavaScript programs: the abilty to suspend and resume execution. This kind of control paves the way for async/await, an &lt;a href=&quot;https://github.com/tc39/ecmascript-asyncawait&quot;&gt;upcoming feature&lt;/a&gt; already supported by Flow.&lt;/p&gt;
-
-
-          
-        </description>
-        <pubDate>Mon, 09 Nov 2015 00:00:00 -0800</pubDate>
-        <link>http://flowtype.org/blog/2015/11/09/Generators.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/11/09/Generators.html</guid>
-      </item>
-    
-      <item>
-        <title>Version 0.17.0</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;Today we released Flow v0.17.0! The first thing you may notice is that we changed the way we display errors at the command line. The new errors look like this:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/static/new_error_format_v0_17_0.png&quot; alt=&quot;New error format&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This should hopefully help our command line users understand many errors without having to refer to their source code. We’ll keep iterating on this format, so tell us what you like and what you don’t like! Thanks to &lt;a href=&quot;https://github.com/frantic&quot;&gt;@frantic&lt;/a&gt; for building this feature!&lt;/p&gt;
-
-&lt;p&gt;There are a whole bunch of other features and fixes in this release! Head on over to our &lt;a href=&quot;https://github.com/facebook/flow/releases/tag/v0.17.0&quot;&gt;Release&lt;/a&gt; for the full list!&lt;/p&gt;
-
-          
-        </description>
-        <pubDate>Wed, 07 Oct 2015 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2015/10/07/Version-0.17.0.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/10/07/Version-0.17.0.html</guid>
-      </item>
-    
-      <item>
-        <title>Version 0.16.0</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;On Friday we released Flow v0.16.0! We had some major perf improvements that we wanted to get into a release, plus let/const support was ready (thanks again &lt;a href=&quot;https://github.com/samwgoldman&quot;&gt;@samwgoldman&lt;/a&gt;)!&lt;/p&gt;
-
-&lt;p&gt;As always, the &lt;a href=&quot;https://github.com/facebook/flow/blob/master/Changelog.md#v0160&quot;&gt;Changelog&lt;/a&gt; is best at summing up the big changes.&lt;/p&gt;
-
-          
-        </description>
-        <pubDate>Tue, 22 Sep 2015 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2015/09/22/Version-0.16.0.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/09/22/Version-0.16.0.html</guid>
-      </item>
-    
-      <item>
-        <title>Version 0.15.0</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;Today we released Flow v0.15.0! A lot has changed in the last month and we’re excited to get the hard work of all our contributors in front of people! Big thanks to everyone who contributed to this release!&lt;/p&gt;
-
-&lt;p&gt;Check out the &lt;a href=&quot;https://github.com/facebook/flow/blob/master/Changelog.md#v0150&quot;&gt;Changelog&lt;/a&gt; to see what’s new.&lt;/p&gt;
-
-          
-        </description>
-        <pubDate>Thu, 10 Sep 2015 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2015/09/10/Version-0.15.0.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/09/10/Version-0.15.0.html</guid>
-      </item>
-    
-      <item>
-        <title>Version 0.14.0</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;It has come to our attention that not everyone obsessively checks GitHub for Flow releases. This came as a surprise, but we would like to support these users too. Therefore, we will start announcing each Flow release on the blog, starting with this release.&lt;/p&gt;
-
-&lt;p&gt;So here is Flow v0.14.0! Check out the &lt;a href=&quot;https://github.com/facebook/flow/blob/master/Changelog.md#v0140&quot;&gt;Changelog&lt;/a&gt; for the canonical list of what has changed.&lt;/p&gt;
-
-          
-        </description>
-        <pubDate>Wed, 29 Jul 2015 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2015/07/29/Version-0.14.0.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/07/29/Version-0.14.0.html</guid>
-      </item>
-    
-      <item>
-        <title>Announcing Disjoint Unions</title>
-        
-        <dc:creator></dc:creator>
-        <description>
-          
-            &lt;p&gt;Sometimes programs need to deal with different kinds of data all at once, where the shape of the data can be different based on what kind of data the code is looking at. This kind of programming is so common in functional programming languages that almost all such languages come with a way of:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Specifying such data by a set of disjoint cases, distinguished by “tags”, where each tag is associated with a different “record” of properties. (These descriptions are called “disjoint union” or “variant” types.)&lt;/li&gt;
-  &lt;li&gt;Doing case analysis on such data, by checking tags and then directly accessing the associated record of properties. (The common way to do such case analysis is by pattern matching.)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Examples of programs that analyze or transform such data range from compilers working with abstract syntax trees, to operations that may return exceptional values,  with much more in between!&lt;/p&gt;
-
-&lt;p&gt;As of Flow 0.13.1 it is now possible to program in this style in JavaScript in a type-safe manner. You can define a disjoint union of object types and do case analysis on objects of that type by switching on the value of some common property (called a “sentinel”) in those object types.&lt;/p&gt;
-
-&lt;p&gt;Flow’s syntax for disjoint unions looks like:&lt;/p&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;BinaryTree&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;leaf&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;branch&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;left&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;BinaryTree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;right&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;BinaryTree&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;sumLeaves&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;BinaryTree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;kind&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;leaf&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;sumLeaves&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;left&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;sumLeaves&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;right&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-
-          
-        </description>
-        <pubDate>Fri, 03 Jul 2015 00:00:00 -0700</pubDate>
-        <link>http://flowtype.org/blog/2015/07/03/Disjoint-Unions.html</link>
-        <guid isPermaLink="true">http://flowtype.org/blog/2015/07/03/Disjoint-Unions.html</guid>
-      </item>
-    
+    {% endfor %}
   </channel>
 </rss>
