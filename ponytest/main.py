@@ -68,11 +68,11 @@ class Meta(type):
         names = unittest.loader.TestLoader().getTestCaseNames(klass)
         mgr = FixtureManager(klass, names, test_level_config=False)
         mgr = list(mgr)
-        names, fixtures, config = mgr[0]
+        names, fixtures, config, fixture_names = mgr[0]
         # if not fixture_chains:
         #     return klass
 
-        builder = ClassFixturesAreContextManagers(klass, fixtures, names, config)
+        builder = ClassFixturesAreContextManagers(klass, fixtures, names, config, fixture_names)
         dic = builder.prepare_case()
         namespace.update(dic)
         return super(Meta, cls).__new__(cls, name, bases, namespace)
@@ -307,7 +307,7 @@ class FixtureManager(object):
                 for scope, f in all_fixtures:
                     items = f._get_providers(config)
                     if items:
-                        if len(items) > 1 and hasattr(f, 'fixture_key'):
+                        if len(f.providers) > 1 and hasattr(f, 'fixture_key'):
                             fixture_names.append(f.fixture_key)
                         yield [(scope, i) for i in items]
             provider_sets = tuple(provider_sets())
@@ -316,7 +316,6 @@ class FixtureManager(object):
                 fixtures = {scope: () for scope in SCOPES}
                 for scope, items in groupby(chain, lambda f: f[0]):
                     fixtures[scope] = [i[1] for i in items]
-
                 if not all(f.validate_fixtures(fixtures, config)
                         for scope, f in all_fixtures):
                     continue
@@ -488,8 +487,6 @@ class Fixture(object):
 
 def provider(name='default', fixture=None, **kwargs):
     def decorator(obj, fixture=fixture):
-        if name == 'log_all':
-            import ipdb; ipdb.set_trace()
         if fixture is None:
             fixture = obj.fixture
         if isinstance(fixture, str):

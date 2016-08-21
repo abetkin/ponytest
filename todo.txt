@@ -22,3 +22,26 @@ ordered list & weights - ?
 -----
 
 --db mysql: do not exec tests for which providers = ['oracle']
+
+
+Fixture -> FixtureHandler
+can be declared for key you want to customize
+
+register('sqlite', abstract='db', obj)
+
+register('debug', func)
+
+fixtures = [
+    'db', 'debug',
+]
+
+parametrize = {
+    'db': ['sqlite', 'postgres']
+}
+
+
+fixture_name, abstract_name
+
+-------------------
+
+namespaces - ?
