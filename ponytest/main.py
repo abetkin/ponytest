@@ -325,13 +325,11 @@ class FixtureManager(object):
         for scope in ['test', 'class']:
             config_fixtures = getattr(config, 'pony_fixtures', {})
             fixtures = config_fixtures.get(scope, ()) or pony_fixtures.get(scope, ())
+            fixtures = set(fixtures)
             include_fixtures = getattr(config, 'include_fixtures', {}).get(scope, ())
-            fixtures.extend(include_fixtures)
+            fixtures.update(include_fixtures)
             exclude_fixtures = getattr(config, 'exclude_fixtures', {}).get(scope, ())
-            if exclude_fixtures:
-                fixtures = [
-                    f for f in fixtures if f not in exclude_fixtures
-                ]
+            fixtures.difference_update(exclude_fixtures)
             for F in fixtures:
                 if not isinstance(F, type):
                     F = Fixture._registry[F]
