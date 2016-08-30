@@ -48,6 +48,7 @@ class IpdbClass(Fixture):
 class IpdbClassProvider(object):
 
     weight = -10
+    enabled = False
 
     def __new__(self, *args, **kw):
         return IpdbProvider(*args, **kw)

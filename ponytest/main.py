@@ -324,7 +324,9 @@ class FixtureManager(object):
     def iter_fixtures(self, config):
         for scope in ['test', 'class']:
             config_fixtures = getattr(config, 'pony_fixtures', {})
-            fixtures = config_fixtures.get(scope, ()) or pony_fixtures.get(scope, ())
+            fixtures = config_fixtures.get(scope, None)
+            if fixtures is None:
+                fixtures = pony_fixtures.get(scope, ())
             fixtures = set(fixtures)
             include_fixtures = getattr(config, 'include_fixtures', {}).get(scope, ())
             fixtures.update(include_fixtures)
