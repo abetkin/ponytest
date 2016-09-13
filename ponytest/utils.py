@@ -108,3 +108,17 @@ class merge_dicts(object):
             except KeyError:
                 pass
         raise KeyError
+
+class drop_into_debugger(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, e, m, tb):
+        if not e:
+            return
+        try:
+            import ipdb as pdb
+        except ImportError:
+            import pdb
+        import sys
+        print(m.__repr__(), file=sys.stderr)
+        pdb.post_mortem(tb)

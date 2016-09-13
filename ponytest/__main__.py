@@ -1,8 +1,17 @@
+import sys
+
 from .program import TestProgram
 from .is_standalone import is_standalone_use
 
-# import ipdb
-# with ipdb.launch_ipdb_on_exception():
+from .utils import PY2, drop_into_debugger
 
-is_standalone_use(False)
-TestProgram(module=None)
+if PY2:
+    from contextlib2 import ExitStack
+else:
+    from contextlib import ExitStack
+
+with ExitStack() as stack:
+    if '--debug' in sys.argv:
+        stack.enter_context(drop_into_debugger())
+    is_standalone_use(False)
+    TestProgram(module=None)
